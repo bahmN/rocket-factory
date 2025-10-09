@@ -1,0 +1,7 @@
+# ./enums/payment_method.yaml
+type: string
+enum:
+  - CARD
+  - SBP
+  - CREDIT_CARD
+  - INVESTOR_MONEY

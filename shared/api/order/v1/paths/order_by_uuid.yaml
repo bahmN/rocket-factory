@@ -1,0 +1,21 @@
+parameters:
+  - $ref: ../params/order_uuid.yaml
+
+get:
+  summary: Возвращает информацию о заказе.
+  operationId: GetOrder
+  tags:
+    - Order
+  responses:
+    '200':
+      description: Order information successfully retrieved
+      content:
+        application/json:
+          schema:
+            $ref: ../components/get_order_response.yaml
+    '404':
+      description: Order data is not found
+      content:
+        application/json:
+          schema:
+            $ref: ../components/errors/not_found_error.yaml

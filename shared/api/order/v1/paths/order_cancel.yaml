@@ -1,0 +1,15 @@
+parameters:
+  - $ref: ../params/order_uuid.yaml
+
+post:
+  summary: Отменяет заказ.
+  operationId: CancelOrder
+  tags:
+    - Order
+  responses:
+    '204':
+      description: the order has been successfully cancelled
+    '404':
+      description: Order data is not found
+    '409':
+      description: The order has already been paid for and cannot be cancelled

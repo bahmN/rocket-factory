@@ -1,0 +1,24 @@
+post:
+  summary: Создаёт новый заказ на основе выбранных пользователем деталей.
+  operationId: CreateOrder
+  tags:
+    - Order
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../components/create_order_request.yaml
+  responses:
+    '201':
+      description: Order successfully created
+      content:
+        application/json:
+          schema:
+            $ref: ../components/create_order_response.yaml
+    '404':
+      description: Part is not found
+      content:
+        application/json:
+          schema:
+            $ref: ../components/errors/not_found_error.yaml
