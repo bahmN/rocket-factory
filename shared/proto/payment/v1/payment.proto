@@ -8,6 +8,14 @@ service PaymentService{
   rpc PayOrder(PayOrderRequest) returns(PayOrderResponse);
 }
 
+enum PaymentMethod{
+  PAYMENT_METHOD_UNKNOWN_UNSPECIFIED = 0;
+  PAYMENT_METHOD_CARD = 1;
+  PAYMENT_METHOD_SBP = 2;
+  PAYMENT_METHOD_CREDIT_CARD = 3;
+  PAYMENT_METHOD_INVESTOR_MONEY = 4;
+}
+
 message PayOrderRequest{
   string order_uuid = 1;
   string user_uuid = 2;
@@ -15,13 +23,5 @@ message PayOrderRequest{
 }
 
 message PayOrderResponse{
-  string transaction_uuid = 4;
-}
-
-enum PaymentMethod{
-  PAYMENT_METHOD_UNKNOWN_UNSPECIFIED = 0;
-  PAYMENT_METHOD_CARD = 1;
-  PAYMENT_METHOD_SBP = 2;
-  PAYMENT_METHOD_CREDIT_CARD = 3;
-  PAYMENT_METHOD_INVESTOR_MONEY = 4;
+  string transaction_uuid = 1;
 }

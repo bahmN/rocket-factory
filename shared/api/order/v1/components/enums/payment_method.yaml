@@ -1,5 +1,7 @@
 # ./enums/payment_method.yaml
 type: string
+description: Способ оплаты
+example: CARD
 enum:
   - CARD
   - SBP

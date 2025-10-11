@@ -135,7 +135,7 @@ func (s *PayOrderRequest) Validate() error {
 	return nil
 }
 
-func (s PayOrderRequestPaymentMethod) Validate() error {
+func (s PaymentMethod) Validate() error {
 	switch s {
 	case "CARD":
 		return nil

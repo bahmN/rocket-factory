@@ -13,3 +13,5 @@ post:
       description: Order data is not found
     '409':
       description: The order has already been paid for and cannot be cancelled
+    '500':
+      description: Internal server error

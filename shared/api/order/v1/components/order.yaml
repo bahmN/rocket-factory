@@ -4,8 +4,6 @@ required:
   - user_uuid
   - part_uuids
   - total_price
-  - transaction_uuid
-  - payment_method
   - status
 properties:
   order_uuid:
@@ -36,9 +34,4 @@ properties:
     description: Способ оплаты
     example: CARD
   status:
-    type: string
-    description: Статус
-    enum:
-      - PENDING_PAYMENT
-      - PAID
-      - CANCELLED
+    $ref: ./enums/payment_method.yaml

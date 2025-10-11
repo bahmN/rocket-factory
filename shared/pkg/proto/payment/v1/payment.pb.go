@@ -138,7 +138,7 @@ func (x *PayOrderRequest) GetPaymentMethod() PaymentMethod {
 
 type PayOrderResponse struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
-	TransactionUuid string                 `protobuf:"bytes,4,opt,name=transaction_uuid,json=transactionUuid,proto3" json:"transaction_uuid,omitempty"`
+	TransactionUuid string                 `protobuf:"bytes,1,opt,name=transaction_uuid,json=transactionUuid,proto3" json:"transaction_uuid,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -192,7 +192,7 @@ const file_payment_v1_payment_proto_rawDesc = "" +
 	"\tuser_uuid\x18\x02 \x01(\tR\buserUuid\x12@\n" +
 	"\x0epayment_method\x18\x03 \x01(\x0e2\x19.payment.v1.PaymentMethodR\rpaymentMethod\"=\n" +
 	"\x10PayOrderResponse\x12)\n" +
-	"\x10transaction_uuid\x18\x04 \x01(\tR\x0ftransactionUuid*\xab\x01\n" +
+	"\x10transaction_uuid\x18\x01 \x01(\tR\x0ftransactionUuid*\xab\x01\n" +
 	"\rPaymentMethod\x12&\n" +
 	"\"PAYMENT_METHOD_UNKNOWN_UNSPECIFIED\x10\x00\x12\x17\n" +
 	"\x13PAYMENT_METHOD_CARD\x10\x01\x12\x16\n" +

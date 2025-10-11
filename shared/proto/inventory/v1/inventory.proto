@@ -12,6 +12,14 @@ service InventoryService {
   rpc ListParts(ListPartsRequest) returns(ListPartsResponse);
 }
 
+enum Category{
+  CATEGORY_UNKNOWN_UNSPECIFIED = 0;
+  CATEGORY_ENGINE = 1;
+  CATEGORY_FUEL = 2;
+  CATEGORY_PORTHOLE = 3;
+  CATEGORY_WING = 4;
+}
+
 message GetPartRequest{
   string uuid = 1;
 }
@@ -62,12 +70,4 @@ message Manufacturer{
   string name = 1;
   string cuntry = 2;
   string website = 3;
-}
-
-enum Category{
-  CATEGORY_UNKNOWN_UNSPECIFIED = 0;
-  CATEGORY_ENGINE = 1;
-  CATEGORY_FUEL = 2;
-  CATEGORY_PORTHOLE = 3;
-  CATEGORY_WING = 4;
 }
