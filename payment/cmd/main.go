@@ -9,7 +9,7 @@ import (
 	"sync"
 	"syscall"
 
-	interceptor "github.com/bahmN/rocket-factory/payment/internal/iterceptor"
+	interceptor "github.com/bahmN/rocket-factory/payment/internal/interceptor"
 	paymentV1 "github.com/bahmN/rocket-factory/shared/pkg/proto/payment/v1"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
