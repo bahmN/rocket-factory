@@ -149,6 +149,52 @@ func (*NotFoundError) createOrderRes() {}
 func (*NotFoundError) getOrderRes()    {}
 func (*NotFoundError) payOrderRes()    {}
 
+// NewOptPaymentMethod returns new OptPaymentMethod with value set to v.
+func NewOptPaymentMethod(v PaymentMethod) OptPaymentMethod {
+	return OptPaymentMethod{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptPaymentMethod is optional PaymentMethod.
+type OptPaymentMethod struct {
+	Value PaymentMethod
+	Set   bool
+}
+
+// IsSet returns true if OptPaymentMethod was set.
+func (o OptPaymentMethod) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptPaymentMethod) Reset() {
+	var v PaymentMethod
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptPaymentMethod) SetTo(v PaymentMethod) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptPaymentMethod) Get() (v PaymentMethod, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptPaymentMethod) Or(d PaymentMethod) PaymentMethod {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
+
 // NewOptString returns new OptString with value set to v.
 func NewOptString(v string) OptString {
 	return OptString{
@@ -206,10 +252,9 @@ type Order struct {
 	// Итоговая стоимость.
 	TotalPrice float64 `json:"total_price"`
 	// UUID транзакции.
-	TransactionUUID OptString `json:"transaction_uuid"`
-	// Способ оплаты.
-	PaymentMethod OptString     `json:"payment_method"`
-	Status        PaymentMethod `json:"status"`
+	TransactionUUID OptString        `json:"transaction_uuid"`
+	PaymentMethod   OptPaymentMethod `json:"payment_method"`
+	Status          OrderStatus      `json:"status"`
 }
 
 // GetOrderUUID returns the value of OrderUUID.
@@ -238,12 +283,12 @@ func (s *Order) GetTransactionUUID() OptString {
 }
 
 // GetPaymentMethod returns the value of PaymentMethod.
-func (s *Order) GetPaymentMethod() OptString {
+func (s *Order) GetPaymentMethod() OptPaymentMethod {
 	return s.PaymentMethod
 }
 
 // GetStatus returns the value of Status.
-func (s *Order) GetStatus() PaymentMethod {
+func (s *Order) GetStatus() OrderStatus {
 	return s.Status
 }
 
@@ -273,12 +318,12 @@ func (s *Order) SetTransactionUUID(val OptString) {
 }
 
 // SetPaymentMethod sets the value of PaymentMethod.
-func (s *Order) SetPaymentMethod(val OptString) {
+func (s *Order) SetPaymentMethod(val OptPaymentMethod) {
 	s.PaymentMethod = val
 }
 
 // SetStatus sets the value of Status.
-func (s *Order) SetStatus(val PaymentMethod) {
+func (s *Order) SetStatus(val OrderStatus) {
 	s.Status = val
 }
 
@@ -336,16 +381,16 @@ func (s *OrderStatus) UnmarshalText(data []byte) error {
 
 // Ref: #/components/schemas/pay_order_request
 type PayOrderRequest struct {
-	PaymentMethod OrderStatus `json:"payment_method"`
+	PaymentMethod PaymentMethod `json:"payment_method"`
 }
 
 // GetPaymentMethod returns the value of PaymentMethod.
-func (s *PayOrderRequest) GetPaymentMethod() OrderStatus {
+func (s *PayOrderRequest) GetPaymentMethod() PaymentMethod {
 	return s.PaymentMethod
 }
 
 // SetPaymentMethod sets the value of PaymentMethod.
-func (s *PayOrderRequest) SetPaymentMethod(val OrderStatus) {
+func (s *PayOrderRequest) SetPaymentMethod(val PaymentMethod) {
 	s.PaymentMethod = val
 }
 
