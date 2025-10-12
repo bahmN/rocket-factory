@@ -1,0 +1,7 @@
+# ./enums/payment_method.yaml
+type: string
+description: Статус
+enum:
+  - PENDING_PAYMENT
+  - PAID
+  - CANCELLED
