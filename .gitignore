@@ -27,4 +27,5 @@
 /bin
 node_modules
 /shared/api/bundles/
+/shared/proto/buf.lock
 /coverage/
