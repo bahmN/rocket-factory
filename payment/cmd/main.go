@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
 	"os"
@@ -12,7 +13,9 @@ import (
 	paymentV1 "github.com/bahmN/rocket-factory/shared/pkg/proto/payment/v1"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/grpc/status"
 )
 
 const grpcPort = ":50051"
@@ -24,10 +27,12 @@ type PaymentService struct {
 }
 
 func (s *PaymentService) PayOrder(ctx context.Context, req *paymentV1.PayOrderRequest) (*paymentV1.PayOrderResponse, error) {
+	if err := req.Validate(); err != nil {
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("validate request is failed: %v", err))
+	}
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
-
-	//TODO: add validating req
 
 	transactionUUID := uuid.NewString()
 
