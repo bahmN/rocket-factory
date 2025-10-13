@@ -22,7 +22,7 @@ import (
 const grpcPort = ":50052"
 
 type InventoryStorage struct {
-	mu          sync.Mutex
+	mu          sync.RWMutex
 	inventories map[string]*inventoryV1.Part
 }
 
@@ -136,8 +136,8 @@ func (s *InventoryStorage) UpdateInventory(uuidPart string, order *inventoryV1.P
 }
 
 func (s *InventoryStorage) GetPart(uuidPart string) *inventoryV1.Part {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 
 	part, ok := s.inventories[uuidPart]
 	if !ok {
@@ -147,17 +147,24 @@ func (s *InventoryStorage) GetPart(uuidPart string) *inventoryV1.Part {
 	return part
 }
 
+func (s *InventoryStorage) GetAllParts() []*inventoryV1.Part {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	parts := make([]*inventoryV1.Part, 0, len(s.inventories))
+	for _, p := range s.inventories {
+		parts = append(parts, p)
+	}
+
+	return parts
+}
+
 type InventoryService struct {
 	inventoryV1.UnimplementedInventoryServiceServer
 
-	mu      sync.RWMutex
 	storage *InventoryStorage
 }
 
 func (s *InventoryService) GetPart(ctx context.Context, req *inventoryV1.GetPartRequest) (*inventoryV1.GetPartResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	part := s.storage.GetPart(req.Uuid)
 	if part == nil {
 		return nil, status.Errorf(codes.NotFound, "part: not found")
@@ -169,13 +176,7 @@ func (s *InventoryService) GetPart(ctx context.Context, req *inventoryV1.GetPart
 }
 
 func (s *InventoryService) ListParts(ctx context.Context, req *inventoryV1.ListPartsRequest) (*inventoryV1.ListPartsResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	parts := make([]*inventoryV1.Part, 0, len(s.storage.inventories))
-	for _, part := range s.storage.inventories {
-		parts = append(parts, part)
-	}
+	parts := s.storage.GetAllParts()
 
 	filter := req.GetFilter()
 	if filter == nil {
@@ -279,7 +280,6 @@ func main() {
 	storage := NewInventoryStorage()
 
 	service := &InventoryService{
-		mu:      sync.RWMutex{},
 		storage: storage,
 	}
 
