@@ -35,34 +35,58 @@ func (s *BadRequestError) SetMessage(val string) {
 	s.Message = val
 }
 
+func (*BadRequestError) cancelOrderRes() {}
 func (*BadRequestError) createOrderRes() {}
 func (*BadRequestError) getOrderRes()    {}
 func (*BadRequestError) payOrderRes()    {}
 
-// CancelOrderBadRequest is response for CancelOrder operation.
-type CancelOrderBadRequest struct{}
+// Ref: #/components/schemas/cancel_order_response
+type CancelOrderResponse struct {
+	// Сообщение о закрытии заказа.
+	Message string `json:"message"`
+}
 
-func (*CancelOrderBadRequest) cancelOrderRes() {}
+// GetMessage returns the value of Message.
+func (s *CancelOrderResponse) GetMessage() string {
+	return s.Message
+}
 
-// CancelOrderConflict is response for CancelOrder operation.
-type CancelOrderConflict struct{}
+// SetMessage sets the value of Message.
+func (s *CancelOrderResponse) SetMessage(val string) {
+	s.Message = val
+}
 
-func (*CancelOrderConflict) cancelOrderRes() {}
+func (*CancelOrderResponse) cancelOrderRes() {}
 
-// CancelOrderInternalServerError is response for CancelOrder operation.
-type CancelOrderInternalServerError struct{}
+// Ref: #/components/schemas/conflict
+type Conflict struct {
+	// HTTP-код ошибки.
+	Code int `json:"code"`
+	// Описание ошибки.
+	Message string `json:"message"`
+}
 
-func (*CancelOrderInternalServerError) cancelOrderRes() {}
+// GetCode returns the value of Code.
+func (s *Conflict) GetCode() int {
+	return s.Code
+}
 
-// CancelOrderNoContent is response for CancelOrder operation.
-type CancelOrderNoContent struct{}
+// GetMessage returns the value of Message.
+func (s *Conflict) GetMessage() string {
+	return s.Message
+}
 
-func (*CancelOrderNoContent) cancelOrderRes() {}
+// SetCode sets the value of Code.
+func (s *Conflict) SetCode(val int) {
+	s.Code = val
+}
 
-// CancelOrderNotFound is response for CancelOrder operation.
-type CancelOrderNotFound struct{}
+// SetMessage sets the value of Message.
+func (s *Conflict) SetMessage(val string) {
+	s.Message = val
+}
 
-func (*CancelOrderNotFound) cancelOrderRes() {}
+func (*Conflict) cancelOrderRes() {}
 
 // Ref: #/components/schemas/create_order_request
 type CreateOrderRequest struct {
@@ -150,6 +174,7 @@ func (s *InternalServerError) SetMessage(val string) {
 	s.Message = val
 }
 
+func (*InternalServerError) cancelOrderRes() {}
 func (*InternalServerError) createOrderRes() {}
 func (*InternalServerError) getOrderRes()    {}
 func (*InternalServerError) payOrderRes()    {}
@@ -182,6 +207,7 @@ func (s *NotFoundError) SetMessage(val string) {
 	s.Message = val
 }
 
+func (*NotFoundError) cancelOrderRes() {}
 func (*NotFoundError) createOrderRes() {}
 func (*NotFoundError) getOrderRes()    {}
 func (*NotFoundError) payOrderRes()    {}

@@ -138,29 +138,40 @@ func (h *Handler) CreateOrder(ctx context.Context, req *orderV1.CreateOrderReque
 
 func (h *Handler) CancelOrder(ctx context.Context, params orderV1.CancelOrderParams) (orderV1.CancelOrderRes, error) {
 	if params.OrderUUID == "" {
-		return &orderV1.CancelOrderBadRequest{}, nil
+		return &orderV1.BadRequestError{
+			Code:    400,
+			Message: "empty order UUID",
+		}, nil
 	}
 
 	order := h.storage.GetOrder(params.OrderUUID)
 	if order == nil {
-		return &orderV1.CancelOrderNotFound{}, nil
+		return &orderV1.NotFoundError{
+			Code:    404,
+			Message: "order not found",
+		}, nil
 	}
 
 	if order.Status == orderV1.OrderStatusPAID || order.Status == orderV1.OrderStatusCANCELLED {
-		return &orderV1.CancelOrderConflict{}, nil
+		return &orderV1.Conflict{
+			Code:    409,
+			Message: "order paid or cancelled",
+		}, nil
 	}
 
 	order.Status = orderV1.OrderStatusCANCELLED
 	h.storage.UpdateOrder(order.OrderUUID, order)
 
-	return &orderV1.CancelOrderNoContent{}, nil
+	return &orderV1.CancelOrderResponse{
+		Message: "order cancelled",
+	}, nil
 }
 
 func (h *Handler) GetOrder(ctx context.Context, params orderV1.GetOrderParams) (orderV1.GetOrderRes, error) {
 	if params.OrderUUID == "" {
 		return &orderV1.BadRequestError{
 			Code:    400,
-			Message: fmt.Sprintf("empty order UUID"),
+			Message: "empty order UUID",
 		}, nil
 	}
 
@@ -254,6 +265,11 @@ func main() {
 		log.Printf("failed to connect: %v\n", err)
 		return
 	}
+	defer func() {
+		if err := inventoryConn.Close(); err != nil {
+			log.Printf("inventory connection close error: %v", err)
+		}
+	}()
 	inventoryClient := inventoryV1.NewInventoryServiceClient(inventoryConn)
 
 	paymentConn, err := grpc.NewClient(
@@ -264,6 +280,11 @@ func main() {
 		log.Printf("failed to connect: %v\n", err)
 		return
 	}
+	defer func() {
+		if err := paymentConn.Close(); err != nil {
+			log.Printf("payment connection close error: %v", err)
+		}
+	}()
 	paymentClient := paymentV1.NewPaymentServiceClient(paymentConn)
 
 	storage := NewOrderStorage()
