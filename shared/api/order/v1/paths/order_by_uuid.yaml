@@ -13,6 +13,12 @@ get:
         application/json:
           schema:
             $ref: ../components/order.yaml
+    '400':
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: ../components/errors/bad_request_error.yaml
     '404':
       description: Order data is not found
       content:

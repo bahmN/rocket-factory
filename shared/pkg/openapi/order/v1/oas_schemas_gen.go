@@ -7,6 +7,43 @@ import (
 	"github.com/go-faster/jx"
 )
 
+// Ref: #/components/schemas/bad_request_error
+type BadRequestError struct {
+	// HTTP-код ошибки.
+	Code int `json:"code"`
+	// Описание ошибки.
+	Message string `json:"message"`
+}
+
+// GetCode returns the value of Code.
+func (s *BadRequestError) GetCode() int {
+	return s.Code
+}
+
+// GetMessage returns the value of Message.
+func (s *BadRequestError) GetMessage() string {
+	return s.Message
+}
+
+// SetCode sets the value of Code.
+func (s *BadRequestError) SetCode(val int) {
+	s.Code = val
+}
+
+// SetMessage sets the value of Message.
+func (s *BadRequestError) SetMessage(val string) {
+	s.Message = val
+}
+
+func (*BadRequestError) createOrderRes() {}
+func (*BadRequestError) getOrderRes()    {}
+func (*BadRequestError) payOrderRes()    {}
+
+// CancelOrderBadRequest is response for CancelOrder operation.
+type CancelOrderBadRequest struct{}
+
+func (*CancelOrderBadRequest) cancelOrderRes() {}
+
 // CancelOrderConflict is response for CancelOrder operation.
 type CancelOrderConflict struct{}
 
