@@ -147,14 +147,14 @@ func (s *InventoryStorage) GetPart(uuidPart string) *inventoryV1.Part {
 	return part
 }
 
-type InventoryServer struct {
+type InventoryService struct {
 	inventoryV1.UnimplementedInventoryServiceServer
 
 	mu      sync.RWMutex
 	storage *InventoryStorage
 }
 
-func (s *InventoryServer) GetPart(ctx context.Context, req *inventoryV1.GetPartRequest) (*inventoryV1.GetPartResponse, error) {
+func (s *InventoryService) GetPart(ctx context.Context, req *inventoryV1.GetPartRequest) (*inventoryV1.GetPartResponse, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -168,7 +168,7 @@ func (s *InventoryServer) GetPart(ctx context.Context, req *inventoryV1.GetPartR
 	}, nil
 }
 
-func (s *InventoryServer) ListParts(ctx context.Context, req *inventoryV1.ListPartsRequest) (*inventoryV1.ListPartsResponse, error) {
+func (s *InventoryService) ListParts(ctx context.Context, req *inventoryV1.ListPartsRequest) (*inventoryV1.ListPartsResponse, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -278,7 +278,7 @@ func main() {
 
 	storage := NewInventoryStorage()
 
-	service := &InventoryServer{
+	service := &InventoryService{
 		mu:      sync.RWMutex{},
 		storage: storage,
 	}
