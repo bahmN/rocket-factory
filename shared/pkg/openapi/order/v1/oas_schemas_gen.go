@@ -7,25 +7,86 @@ import (
 	"github.com/go-faster/jx"
 )
 
-// CancelOrderConflict is response for CancelOrder operation.
-type CancelOrderConflict struct{}
+// Ref: #/components/schemas/bad_request_error
+type BadRequestError struct {
+	// HTTP-код ошибки.
+	Code int `json:"code"`
+	// Описание ошибки.
+	Message string `json:"message"`
+}
 
-func (*CancelOrderConflict) cancelOrderRes() {}
+// GetCode returns the value of Code.
+func (s *BadRequestError) GetCode() int {
+	return s.Code
+}
 
-// CancelOrderInternalServerError is response for CancelOrder operation.
-type CancelOrderInternalServerError struct{}
+// GetMessage returns the value of Message.
+func (s *BadRequestError) GetMessage() string {
+	return s.Message
+}
 
-func (*CancelOrderInternalServerError) cancelOrderRes() {}
+// SetCode sets the value of Code.
+func (s *BadRequestError) SetCode(val int) {
+	s.Code = val
+}
 
-// CancelOrderNoContent is response for CancelOrder operation.
-type CancelOrderNoContent struct{}
+// SetMessage sets the value of Message.
+func (s *BadRequestError) SetMessage(val string) {
+	s.Message = val
+}
 
-func (*CancelOrderNoContent) cancelOrderRes() {}
+func (*BadRequestError) cancelOrderRes() {}
+func (*BadRequestError) createOrderRes() {}
+func (*BadRequestError) getOrderRes()    {}
+func (*BadRequestError) payOrderRes()    {}
 
-// CancelOrderNotFound is response for CancelOrder operation.
-type CancelOrderNotFound struct{}
+// Ref: #/components/schemas/cancel_order_response
+type CancelOrderResponse struct {
+	// Сообщение о закрытии заказа.
+	Message string `json:"message"`
+}
 
-func (*CancelOrderNotFound) cancelOrderRes() {}
+// GetMessage returns the value of Message.
+func (s *CancelOrderResponse) GetMessage() string {
+	return s.Message
+}
+
+// SetMessage sets the value of Message.
+func (s *CancelOrderResponse) SetMessage(val string) {
+	s.Message = val
+}
+
+func (*CancelOrderResponse) cancelOrderRes() {}
+
+// Ref: #/components/schemas/conflict
+type Conflict struct {
+	// HTTP-код ошибки.
+	Code int `json:"code"`
+	// Описание ошибки.
+	Message string `json:"message"`
+}
+
+// GetCode returns the value of Code.
+func (s *Conflict) GetCode() int {
+	return s.Code
+}
+
+// GetMessage returns the value of Message.
+func (s *Conflict) GetMessage() string {
+	return s.Message
+}
+
+// SetCode sets the value of Code.
+func (s *Conflict) SetCode(val int) {
+	s.Code = val
+}
+
+// SetMessage sets the value of Message.
+func (s *Conflict) SetMessage(val string) {
+	s.Message = val
+}
+
+func (*Conflict) cancelOrderRes() {}
 
 // Ref: #/components/schemas/create_order_request
 type CreateOrderRequest struct {
@@ -113,6 +174,7 @@ func (s *InternalServerError) SetMessage(val string) {
 	s.Message = val
 }
 
+func (*InternalServerError) cancelOrderRes() {}
 func (*InternalServerError) createOrderRes() {}
 func (*InternalServerError) getOrderRes()    {}
 func (*InternalServerError) payOrderRes()    {}
@@ -145,9 +207,56 @@ func (s *NotFoundError) SetMessage(val string) {
 	s.Message = val
 }
 
+func (*NotFoundError) cancelOrderRes() {}
 func (*NotFoundError) createOrderRes() {}
 func (*NotFoundError) getOrderRes()    {}
 func (*NotFoundError) payOrderRes()    {}
+
+// NewOptPaymentMethod returns new OptPaymentMethod with value set to v.
+func NewOptPaymentMethod(v PaymentMethod) OptPaymentMethod {
+	return OptPaymentMethod{
+		Value: v,
+		Set:   true,
+	}
+}
+
+// OptPaymentMethod is optional PaymentMethod.
+type OptPaymentMethod struct {
+	Value PaymentMethod
+	Set   bool
+}
+
+// IsSet returns true if OptPaymentMethod was set.
+func (o OptPaymentMethod) IsSet() bool { return o.Set }
+
+// Reset unsets value.
+func (o *OptPaymentMethod) Reset() {
+	var v PaymentMethod
+	o.Value = v
+	o.Set = false
+}
+
+// SetTo sets value to v.
+func (o *OptPaymentMethod) SetTo(v PaymentMethod) {
+	o.Set = true
+	o.Value = v
+}
+
+// Get returns value and boolean that denotes whether value was set.
+func (o OptPaymentMethod) Get() (v PaymentMethod, ok bool) {
+	if !o.Set {
+		return v, false
+	}
+	return o.Value, true
+}
+
+// Or returns value if set, or given parameter if does not.
+func (o OptPaymentMethod) Or(d PaymentMethod) PaymentMethod {
+	if v, ok := o.Get(); ok {
+		return v
+	}
+	return d
+}
 
 // NewOptString returns new OptString with value set to v.
 func NewOptString(v string) OptString {
@@ -206,10 +315,9 @@ type Order struct {
 	// Итоговая стоимость.
 	TotalPrice float64 `json:"total_price"`
 	// UUID транзакции.
-	TransactionUUID OptString `json:"transaction_uuid"`
-	// Способ оплаты.
-	PaymentMethod OptString     `json:"payment_method"`
-	Status        PaymentMethod `json:"status"`
+	TransactionUUID OptString        `json:"transaction_uuid"`
+	PaymentMethod   OptPaymentMethod `json:"payment_method"`
+	Status          OrderStatus      `json:"status"`
 }
 
 // GetOrderUUID returns the value of OrderUUID.
@@ -238,12 +346,12 @@ func (s *Order) GetTransactionUUID() OptString {
 }
 
 // GetPaymentMethod returns the value of PaymentMethod.
-func (s *Order) GetPaymentMethod() OptString {
+func (s *Order) GetPaymentMethod() OptPaymentMethod {
 	return s.PaymentMethod
 }
 
 // GetStatus returns the value of Status.
-func (s *Order) GetStatus() PaymentMethod {
+func (s *Order) GetStatus() OrderStatus {
 	return s.Status
 }
 
@@ -273,12 +381,12 @@ func (s *Order) SetTransactionUUID(val OptString) {
 }
 
 // SetPaymentMethod sets the value of PaymentMethod.
-func (s *Order) SetPaymentMethod(val OptString) {
+func (s *Order) SetPaymentMethod(val OptPaymentMethod) {
 	s.PaymentMethod = val
 }
 
 // SetStatus sets the value of Status.
-func (s *Order) SetStatus(val PaymentMethod) {
+func (s *Order) SetStatus(val OrderStatus) {
 	s.Status = val
 }
 
@@ -336,16 +444,16 @@ func (s *OrderStatus) UnmarshalText(data []byte) error {
 
 // Ref: #/components/schemas/pay_order_request
 type PayOrderRequest struct {
-	PaymentMethod OrderStatus `json:"payment_method"`
+	PaymentMethod PaymentMethod `json:"payment_method"`
 }
 
 // GetPaymentMethod returns the value of PaymentMethod.
-func (s *PayOrderRequest) GetPaymentMethod() OrderStatus {
+func (s *PayOrderRequest) GetPaymentMethod() PaymentMethod {
 	return s.PaymentMethod
 }
 
 // SetPaymentMethod sets the value of PaymentMethod.
-func (s *PayOrderRequest) SetPaymentMethod(val OrderStatus) {
+func (s *PayOrderRequest) SetPaymentMethod(val PaymentMethod) {
 	s.PaymentMethod = val
 }
 

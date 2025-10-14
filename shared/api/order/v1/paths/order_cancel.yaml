@@ -8,10 +8,32 @@ post:
     - Order
   responses:
     '204':
-      description: the order has been successfully cancelled
+      description: The order has been successfully cancelled
+      content:
+        application/json:
+          schema:
+            $ref: ../components/cancel_order_response.yaml
+    '400':
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: ../components/errors/bad_request_error.yaml
     '404':
       description: Order data is not found
+      content:
+        application/json:
+          schema:
+            $ref: ../components/errors/not_found_error.yaml
     '409':
       description: The order has already been paid for and cannot be cancelled
+      content:
+        application/json:
+          schema:
+            $ref: ../components/errors/conflict.yaml
     '500':
       description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: ../components/errors/internal_server_error.yaml

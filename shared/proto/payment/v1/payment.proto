@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package payment.v1;
 
+import "validate/validate.proto";
+
 option go_package = "github.com/bahmN/rocket-factory/shared/pkg/proto/payment/v1;paymentV1";
 
 service PaymentService{
@@ -17,9 +19,9 @@ enum PaymentMethod{
 }
 
 message PayOrderRequest{
-  string order_uuid = 1;
-  string user_uuid = 2;
-  PaymentMethod payment_method = 3;
+  string order_uuid = 1 [(validate.rules).string.uuid = true];
+  string user_uuid = 2 [(validate.rules).string.uuid = true];
+  PaymentMethod payment_method = 3 [(validate.rules).enum.defined_only = true];
 }
 
 message PayOrderResponse{

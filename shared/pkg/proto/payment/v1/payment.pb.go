@@ -7,11 +7,13 @@
 package paymentV1
 
 import (
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
+
+	_ "github.com/envoyproxy/protoc-gen-validate/validate"
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (
@@ -185,12 +187,12 @@ var File_payment_v1_payment_proto protoreflect.FileDescriptor
 const file_payment_v1_payment_proto_rawDesc = "" +
 	"\n" +
 	"\x18payment/v1/payment.proto\x12\n" +
-	"payment.v1\"\x8f\x01\n" +
-	"\x0fPayOrderRequest\x12\x1d\n" +
+	"payment.v1\x1a\x17validate/validate.proto\"\xad\x01\n" +
+	"\x0fPayOrderRequest\x12'\n" +
 	"\n" +
-	"order_uuid\x18\x01 \x01(\tR\torderUuid\x12\x1b\n" +
-	"\tuser_uuid\x18\x02 \x01(\tR\buserUuid\x12@\n" +
-	"\x0epayment_method\x18\x03 \x01(\x0e2\x19.payment.v1.PaymentMethodR\rpaymentMethod\"=\n" +
+	"order_uuid\x18\x01 \x01(\tB\b\xfaB\x05r\x03\xb0\x01\x01R\torderUuid\x12%\n" +
+	"\tuser_uuid\x18\x02 \x01(\tB\b\xfaB\x05r\x03\xb0\x01\x01R\buserUuid\x12J\n" +
+	"\x0epayment_method\x18\x03 \x01(\x0e2\x19.payment.v1.PaymentMethodB\b\xfaB\x05\x82\x01\x02\x10\x01R\rpaymentMethod\"=\n" +
 	"\x10PayOrderResponse\x12)\n" +
 	"\x10transaction_uuid\x18\x01 \x01(\tR\x0ftransactionUuid*\xab\x01\n" +
 	"\rPaymentMethod\x12&\n" +
@@ -214,13 +216,15 @@ func file_payment_v1_payment_proto_rawDescGZIP() []byte {
 	return file_payment_v1_payment_proto_rawDescData
 }
 
-var file_payment_v1_payment_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_payment_v1_payment_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
-var file_payment_v1_payment_proto_goTypes = []any{
-	(PaymentMethod)(0),       // 0: payment.v1.PaymentMethod
-	(*PayOrderRequest)(nil),  // 1: payment.v1.PayOrderRequest
-	(*PayOrderResponse)(nil), // 2: payment.v1.PayOrderResponse
-}
+var (
+	file_payment_v1_payment_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+	file_payment_v1_payment_proto_msgTypes  = make([]protoimpl.MessageInfo, 2)
+	file_payment_v1_payment_proto_goTypes   = []any{
+		(PaymentMethod)(0),       // 0: payment.v1.PaymentMethod
+		(*PayOrderRequest)(nil),  // 1: payment.v1.PayOrderRequest
+		(*PayOrderResponse)(nil), // 2: payment.v1.PayOrderResponse
+	}
+)
 var file_payment_v1_payment_proto_depIdxs = []int32{
 	0, // 0: payment.v1.PayOrderRequest.payment_method:type_name -> payment.v1.PaymentMethod
 	1, // 1: payment.v1.PaymentService.PayOrder:input_type -> payment.v1.PayOrderRequest

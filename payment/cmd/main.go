@@ -9,6 +9,7 @@ import (
 	"sync"
 	"syscall"
 
+	interceptor "github.com/bahmN/rocket-factory/payment/internal/interceptor"
 	paymentV1 "github.com/bahmN/rocket-factory/shared/pkg/proto/payment/v1"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
@@ -27,8 +28,6 @@ func (s *PaymentService) PayOrder(ctx context.Context, req *paymentV1.PayOrderRe
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	//TODO: add validating req
-
 	transactionUUID := uuid.NewString()
 
 	log.Printf("Оплата прошла успешно, transaction_uuid: %s", transactionUUID)
@@ -44,7 +43,11 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	s := grpc.NewServer()
+	s := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(
+			grpc.UnaryServerInterceptor(interceptor.ValidatorInterceptor()),
+		),
+	)
 
 	service := &PaymentService{
 		mu: sync.RWMutex{},
