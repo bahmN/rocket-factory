@@ -21,20 +21,123 @@ import (
 
 const grpcPort = ":50052"
 
-type InventoryStorage struct {
+type InventoryService struct {
+	inventoryV1.UnimplementedInventoryServiceServer
 	mu          sync.RWMutex
 	inventories map[string]*inventoryV1.Part
 }
 
-func NewInventoryStorage() *InventoryStorage {
-	storage := &InventoryStorage{
-		inventories: make(map[string]*inventoryV1.Part),
+func (s *InventoryService) GetPart(ctx context.Context, req *inventoryV1.GetPartRequest) (*inventoryV1.GetPartResponse, error) {
+	part := s.inventories[req.Uuid]
+	if part == nil {
+		return nil, status.Errorf(codes.NotFound, "part: not found")
 	}
-	storage.seedTestData()
-	return storage
+
+	return &inventoryV1.GetPartResponse{
+		Part: part,
+	}, nil
 }
 
-func (s *InventoryStorage) seedTestData() {
+func (s *InventoryService) ListParts(ctx context.Context, req *inventoryV1.ListPartsRequest) (*inventoryV1.ListPartsResponse, error) {
+	s.mu.RLock()
+	parts := make([]*inventoryV1.Part, 0, len(s.inventories))
+	for _, part := range s.inventories {
+		parts = append(parts, part)
+	}
+	s.mu.RUnlock()
+
+	filter := req.GetFilter()
+	if filter == nil {
+		return &inventoryV1.ListPartsResponse{Parts: parts}, nil
+	}
+
+	if len(filter.Uuids) > 0 {
+		uuidSet := make(map[string]struct{}, len(filter.Uuids))
+		for _, u := range filter.Uuids {
+			uuidSet[u] = struct{}{}
+		}
+		tmp := parts[:0]
+		for _, part := range parts {
+			if _, ok := uuidSet[part.Uuid]; ok {
+				tmp = append(tmp, part)
+			}
+		}
+		parts = tmp
+	}
+
+	if len(filter.Names) > 0 {
+		nameSet := make(map[string]struct{}, len(filter.Names))
+		for _, n := range filter.Names {
+			nameSet[n] = struct{}{}
+		}
+		tmp := parts[:0]
+		for _, part := range parts {
+			if _, ok := nameSet[part.Name]; ok {
+				tmp = append(tmp, part)
+			}
+		}
+		parts = tmp
+	}
+
+	if len(filter.Categories) > 0 {
+		catSet := make(map[inventoryV1.Category]struct{}, len(filter.Categories))
+		for _, c := range filter.Categories {
+			catSet[c] = struct{}{}
+		}
+		tmp := parts[:0]
+		for _, part := range parts {
+			if _, ok := catSet[part.Category]; ok {
+				tmp = append(tmp, part)
+			}
+		}
+		parts = tmp
+	}
+
+	if len(filter.ManufacturerCountries) > 0 {
+		countrySet := make(map[string]struct{}, len(filter.ManufacturerCountries))
+		for _, c := range filter.ManufacturerCountries {
+			countrySet[c] = struct{}{}
+		}
+		tmp := parts[:0]
+		for _, part := range parts {
+			if part.Manufacturer != nil {
+				if _, ok := countrySet[part.Manufacturer.Cuntry]; ok {
+					tmp = append(tmp, part)
+				}
+			}
+		}
+		parts = tmp
+	}
+
+	if len(filter.Tags) > 0 {
+		tagSet := make(map[string]struct{}, len(filter.Tags))
+		for _, t := range filter.Tags {
+			tagSet[t] = struct{}{}
+		}
+		tmp := parts[:0]
+		for _, part := range parts {
+			found := false
+			for _, tag := range part.Tags {
+				if _, ok := tagSet[tag]; ok {
+					found = true
+					break
+				}
+			}
+			if found {
+				tmp = append(tmp, part)
+			}
+		}
+		parts = tmp
+	}
+
+	if len(parts) == 0 {
+		return nil, status.Errorf(codes.NotFound, "parts: not found")
+	}
+
+	return &inventoryV1.ListPartsResponse{Parts: parts}, nil
+}
+
+func (s *InventoryService) seedTestData() {
 	parts := []*inventoryV1.Part{
 		{
 			Uuid:          uuid.NewString(),
@@ -128,147 +231,6 @@ func (s *InventoryStorage) seedTestData() {
 	}
 }
 
-func (s *InventoryStorage) UpdateInventory(uuidPart string, order *inventoryV1.Part) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	s.inventories[uuidPart] = order
-}
-
-func (s *InventoryStorage) GetPart(uuidPart string) *inventoryV1.Part {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	part, ok := s.inventories[uuidPart]
-	if !ok {
-		return nil
-	}
-
-	return part
-}
-
-func (s *InventoryStorage) GetAllParts() []*inventoryV1.Part {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	parts := make([]*inventoryV1.Part, 0, len(s.inventories))
-	for _, p := range s.inventories {
-		parts = append(parts, p)
-	}
-
-	return parts
-}
-
-type InventoryService struct {
-	inventoryV1.UnimplementedInventoryServiceServer
-
-	storage *InventoryStorage
-}
-
-func (s *InventoryService) GetPart(ctx context.Context, req *inventoryV1.GetPartRequest) (*inventoryV1.GetPartResponse, error) {
-	part := s.storage.GetPart(req.Uuid)
-	if part == nil {
-		return nil, status.Errorf(codes.NotFound, "part: not found")
-	}
-
-	return &inventoryV1.GetPartResponse{
-		Part: part,
-	}, nil
-}
-
-func (s *InventoryService) ListParts(ctx context.Context, req *inventoryV1.ListPartsRequest) (*inventoryV1.ListPartsResponse, error) {
-	parts := s.storage.GetAllParts()
-
-	filter := req.GetFilter()
-	if filter == nil {
-		return &inventoryV1.ListPartsResponse{Parts: parts}, nil
-	}
-
-	if len(filter.Uuids) > 0 {
-		uuidSet := make(map[string]struct{}, len(filter.Uuids))
-		for _, u := range filter.Uuids {
-			uuidSet[u] = struct{}{}
-		}
-		tmp := parts[:0]
-		for _, part := range parts {
-			if _, ok := uuidSet[part.Uuid]; ok {
-				tmp = append(tmp, part)
-			}
-		}
-		parts = tmp
-	}
-
-	if len(filter.Names) > 0 {
-		nameSet := make(map[string]struct{}, len(filter.Names))
-		for _, n := range filter.Names {
-			nameSet[n] = struct{}{}
-		}
-		tmp := parts[:0]
-		for _, part := range parts {
-			if _, ok := nameSet[part.Name]; ok {
-				tmp = append(tmp, part)
-			}
-		}
-		parts = tmp
-	}
-
-	if len(filter.Categories) > 0 {
-		catSet := make(map[inventoryV1.Category]struct{}, len(filter.Categories))
-		for _, c := range filter.Categories {
-			catSet[c] = struct{}{}
-		}
-		tmp := parts[:0]
-		for _, part := range parts {
-			if _, ok := catSet[part.Category]; ok {
-				tmp = append(tmp, part)
-			}
-		}
-		parts = tmp
-	}
-
-	if len(filter.ManufacturerCountries) > 0 {
-		countrySet := make(map[string]struct{}, len(filter.ManufacturerCountries))
-		for _, c := range filter.ManufacturerCountries {
-			countrySet[c] = struct{}{}
-		}
-		tmp := parts[:0]
-		for _, part := range parts {
-			if part.Manufacturer != nil {
-				if _, ok := countrySet[part.Manufacturer.Cuntry]; ok {
-					tmp = append(tmp, part)
-				}
-			}
-		}
-		parts = tmp
-	}
-
-	if len(filter.Tags) > 0 {
-		tagSet := make(map[string]struct{}, len(filter.Tags))
-		for _, t := range filter.Tags {
-			tagSet[t] = struct{}{}
-		}
-		tmp := parts[:0]
-		for _, part := range parts {
-			found := false
-			for _, tag := range part.Tags {
-				if _, ok := tagSet[tag]; ok {
-					found = true
-					break
-				}
-			}
-			if found {
-				tmp = append(tmp, part)
-			}
-		}
-		parts = tmp
-	}
-
-	if len(parts) == 0 {
-		return nil, status.Errorf(codes.NotFound, "parts: not found")
-	}
-
-	return &inventoryV1.ListPartsResponse{Parts: parts}, nil
-}
-
 func main() {
 	lis, err := net.Listen("tcp", grpcPort)
 	if err != nil {
@@ -277,11 +239,13 @@ func main() {
 
 	s := grpc.NewServer()
 
-	storage := NewInventoryStorage()
+	inventories := map[string]*inventoryV1.Part{}
 
 	service := &InventoryService{
-		storage: storage,
+		inventories: inventories,
 	}
+
+	service.seedTestData()
 
 	inventoryV1.RegisterInventoryServiceServer(s, service)
 
