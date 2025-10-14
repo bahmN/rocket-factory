@@ -28,6 +28,8 @@ type InventoryService struct {
 }
 
 func (s *InventoryService) GetPart(ctx context.Context, req *inventoryV1.GetPartRequest) (*inventoryV1.GetPartResponse, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	part := s.inventories[req.Uuid]
 	if part == nil {
 		return nil, status.Errorf(codes.NotFound, "part: not found")
