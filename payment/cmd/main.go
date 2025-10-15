@@ -7,13 +7,12 @@ import (
 	"os/signal"
 	"syscall"
 
-	interceptor "github.com/bahmN/rocket-factory/payment/internal/interceptor"
+	apiService "github.com/bahmN/rocket-factory/payment/internal/api/payment/v1"
+	"github.com/bahmN/rocket-factory/payment/internal/interceptor"
+	paymentService "github.com/bahmN/rocket-factory/payment/internal/service/payment"
 	paymentV1 "github.com/bahmN/rocket-factory/shared/pkg/proto/payment/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-
-	apiService "github.com/bahmN/rocket-factory/payment/internal/api/payment/v1"
-	paymentService "github.com/bahmN/rocket-factory/payment/internal/service/payment"
 )
 
 const grpcPort = ":50051"

@@ -36,7 +36,7 @@ vars:
 
   OPEN_API_FILES: '{{.ROOT_DIR}}/shared/api/bundles'
 
-  MODULES: order shared
+  MODULES: inventory order payment shared
 
 tasks:
   install-formatters:
