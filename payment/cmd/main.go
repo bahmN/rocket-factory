@@ -1,41 +1,22 @@
 package main
 
 import (
-	"context"
 	"log"
 	"net"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 
 	interceptor "github.com/bahmN/rocket-factory/payment/internal/interceptor"
 	paymentV1 "github.com/bahmN/rocket-factory/shared/pkg/proto/payment/v1"
-	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+
+	apiService "github.com/bahmN/rocket-factory/payment/internal/api/payment/v1"
+	paymentService "github.com/bahmN/rocket-factory/payment/internal/service/payment"
 )
 
 const grpcPort = ":50051"
-
-type PaymentService struct {
-	paymentV1.UnimplementedPaymentServiceServer
-
-	mu sync.RWMutex
-}
-
-func (s *PaymentService) PayOrder(ctx context.Context, req *paymentV1.PayOrderRequest) (*paymentV1.PayOrderResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	transactionUUID := uuid.NewString()
-
-	log.Printf("Оплата прошла успешно, transaction_uuid: %s", transactionUUID)
-
-	return &paymentV1.PayOrderResponse{
-		TransactionUuid: transactionUUID,
-	}, nil
-}
 
 func main() {
 	lis, err := net.Listen("tcp", grpcPort)
@@ -49,11 +30,10 @@ func main() {
 		),
 	)
 
-	service := &PaymentService{
-		mu: sync.RWMutex{},
-	}
+	service := paymentService.NewService()
+	api := apiService.NewAPI(service)
 
-	paymentV1.RegisterPaymentServiceServer(s, service)
+	paymentV1.RegisterPaymentServiceServer(s, api)
 
 	reflection.Register(s)
 
