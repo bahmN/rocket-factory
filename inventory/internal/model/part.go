@@ -3,16 +3,16 @@ package model
 import "time"
 
 type Dimensions struct {
-	length int32
-	width  int32
-	height int32
-	weight int32
+	Length float64
+	Width  float64
+	Height float64
+	Weight float64
 }
 
 type Manufacturer struct {
-	name    string
-	cuntry  string
-	website string
+	Name    string
+	Cuntry  string
+	Website string
 }
 
 type Part struct {

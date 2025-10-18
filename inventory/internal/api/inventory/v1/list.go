@@ -12,6 +12,10 @@ import (
 )
 
 func (a *api) ListParts(ctx context.Context, req *inventoryV1.ListPartsRequest) (*inventoryV1.ListPartsResponse, error) {
+	if req.GetFilter() == nil {
+		return nil, status.Error(codes.InvalidArgument, "request is nil")
+	}
+
 	parts, err := a.inventoryService.ListParts(ctx, converter.FilterToModel(req.GetFilter()))
 	if err != nil {
 		if errors.Is(err, model.ErrPartNotFound) {
