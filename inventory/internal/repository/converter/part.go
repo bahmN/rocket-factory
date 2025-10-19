@@ -49,6 +49,7 @@ func dimensionToModel(dim *repoModel.Dimensions) *model.Dimensions {
 		Weight: dim.Weight,
 	}
 }
+
 func manufacturerToModel(manu *repoModel.Manufacturer) *model.Manufacturer {
 	return &model.Manufacturer{
 		Name:    manu.Name,
