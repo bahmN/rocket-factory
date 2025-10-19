@@ -305,7 +305,7 @@ tasks:
     status:
       - test -x {{.GRPCURL}}
 
-  test-api:
+  test:api:
     desc: "🧪 Запуск тестов для проверки API микросервисов"
     deps: [ grpcurl:install ]
     cmds:
@@ -499,7 +499,7 @@ tasks:
         echo
         echo "🎉 Все тесты API успешно выполнены!"
 
-  test-coverage:
+  test:coverage:
     desc: "Тесты с покрытием бизнес-логики (service/repository), отчёт по каждому модулю + общий"
     cmds:
       - |
@@ -554,7 +554,7 @@ tasks:
         echo "🧾 Общее покрытие по всем модулям:"
         go tool cover -func={{.COVERAGE_DIR}}/{{.COVERAGE_FILE}} | tail -n1
 
-  coverage:html:
+  test:coverage-html:
     desc: "Генерирует HTML-отчёт покрытия и открывает его в браузере"
     deps: [ test-coverage ]
     cmds:
