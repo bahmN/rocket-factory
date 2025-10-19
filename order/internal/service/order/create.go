@@ -13,6 +13,10 @@ func (s *service) Create(ctx context.Context, req model.CreateOrderReq) (model.C
 		UUIDs: req.PartsUUID,
 	})
 	if err != nil {
+		return model.CreateOrderResp{}, err
+	}
+
+	if len(parts) == 0 {
 		return model.CreateOrderResp{}, model.ErrPartsNotFound
 	}
 

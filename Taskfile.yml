@@ -500,7 +500,7 @@ tasks:
         echo "🎉 Все тесты API успешно выполнены!"
 
   test:coverage:
-    desc: "Тесты с покрытием бизнес-логики (service/repository), отчёт по каждому модулю + общий"
+    desc: "Тесты с покрытием бизнес-логики (service), отчёт по каждому модулю + общий"
     cmds:
       - |
         echo "🧪 Запускаем расчёт покрытия..."
@@ -512,7 +512,7 @@ tasks:
           echo "📦 Обрабатываем модуль: $mod"
         
           TARGET_PKGS=$(go list ./$mod/... \
-            | grep -E '/(internal/(service|repository))' \
+            | grep -E '/(internal/(service))' \
             | grep -vE '/(mocks|testdata|pkg|api|proto|pb|cmd)' \
             | paste -sd "," -)
         
@@ -554,9 +554,9 @@ tasks:
         echo "🧾 Общее покрытие по всем модулям:"
         go tool cover -func={{.COVERAGE_DIR}}/{{.COVERAGE_FILE}} | tail -n1
 
-  test:coverage-html:
+  test:coverage-web:
     desc: "Генерирует HTML-отчёт покрытия и открывает его в браузере"
-    deps: [ test-coverage ]
+    deps: [ test:coverage ]
     cmds:
       - |
         OUTPUT={{.COVERAGE_DIR}}/coverage.html

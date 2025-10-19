@@ -15,7 +15,6 @@ type ServiceSuit struct {
 
 func (s *ServiceSuit) SetupTest() {
 	s.ctx = context.Background()
-
 	s.service = NewService()
 }
 
