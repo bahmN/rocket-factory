@@ -1,18 +1,21 @@
 package v1
 
 import (
-	def "github.com/bahmN/rocket-factory/order/internal/client/grpc"
+	"context"
+
+	clientConverter "github.com/bahmN/rocket-factory/order/internal/client/converter"
 	generatedPaymentV1 "github.com/bahmN/rocket-factory/shared/pkg/proto/payment/v1"
 )
 
-var _ def.InventoryClient = (*client)(nil)
-
-type client struct {
-	generatedClient generatedPaymentV1.PaymentServiceClient
-}
-
-func NewClient(generatedClient generatedPaymentV1.PaymentServiceClient) *client {
-	return &client{
-		generatedClient: generatedClient,
+func (c *client) PayOrder(ctx context.Context, orderUUID, userUUID, paymentMethod string) (string, error) {
+	payment, err := c.generatedClient.PayOrder(ctx, &generatedPaymentV1.PayOrderRequest{
+		OrderUuid:     orderUUID,
+		UserUuid:      userUUID,
+		PaymentMethod: clientConverter.PaymentMethodToProto(paymentMethod),
+	})
+	if err != nil {
+		return "", err
 	}
+
+	return payment.TransactionUuid, nil
 }
