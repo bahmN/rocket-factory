@@ -21,16 +21,10 @@ jobs:
         run: |
           chmod +x .github/scripts/extract-versions.sh
           .github/scripts/extract-versions.sh
-  test:
-    uses: ./.github/workflows/test-reusable.yml
-    with:
-      modules: ${{ needs.extract-vars.outputs.modules }}
-      go-version: ${{ needs.extract-vars.outputs.go-version }}
 
   coverage:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     uses: ./.github/workflows/test-coverage-reusable.yml
-    needs: test
     with:
       modules: ${{ needs.extract-vars.outputs.modules }}
       go-version: ${{ needs.extract-vars.outputs.go-version }}
