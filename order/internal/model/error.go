@@ -8,4 +8,4 @@ var ErrPartsNotFound = errors.New("parts not found")
 
 var ErrOrderPaidOrCanceled = errors.New("order paid or canceled")
 
-var ErrEmptyUUID = errors.New("Empty UUID")
+var ErrEmptyUUID = errors.New("empty UUID")

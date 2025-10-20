@@ -1,6 +1,7 @@
 package order
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/bahmN/rocket-factory/order/internal/model"
@@ -19,11 +20,12 @@ func (s *ServiceSuit) TestCreateOrderSuccess() {
 			{UUID: partUUID2, Price: gofakeit.Price(1000, 5000)},
 		}
 	)
+	ctx := context.Background()
 
-	s.inventoryClient.On("ListParts", s.ctx, model.Filter{UUIDs: partUUIDs}).Return(parts, nil)
-	s.orderRepository.On("Update", s.ctx, mock.AnythingOfType("string"), mock.AnythingOfType("model.OrderInfo")).Return(nil)
+	s.inventoryClient.On("ListParts", ctx, model.Filter{UUIDs: partUUIDs}).Return(parts, nil)
+	s.orderRepository.On("Update", ctx, mock.AnythingOfType("string"), mock.AnythingOfType("model.OrderInfo")).Return(nil)
 
-	result, err := s.service.Create(s.ctx, model.CreateOrderReq{
+	result, err := s.service.Create(ctx, model.CreateOrderReq{
 		UserUUID:  userUUID,
 		PartsUUID: partUUIDs,
 	})
@@ -35,11 +37,12 @@ func (s *ServiceSuit) TestCreateOrderSuccess() {
 func (s *ServiceSuit) TestCreateOrderListPartsError() {
 	userUUID := gofakeit.UUID()
 	partUUIDs := []string{gofakeit.UUID(), gofakeit.UUID()}
+	ctx := context.Background()
 
-	s.inventoryClient.On("ListParts", s.ctx, model.Filter{UUIDs: partUUIDs}).
+	s.inventoryClient.On("ListParts", ctx, model.Filter{UUIDs: partUUIDs}).
 		Return(nil, fmt.Errorf("inventory service error"))
 
-	result, err := s.service.Create(s.ctx, model.CreateOrderReq{
+	result, err := s.service.Create(ctx, model.CreateOrderReq{
 		UserUUID:  userUUID,
 		PartsUUID: partUUIDs,
 	})
@@ -59,16 +62,17 @@ func (s *ServiceSuit) TestCreateOrderUpdateError() {
 		{UUID: partUUID1, Price: 1000},
 		{UUID: partUUID2, Price: 2000},
 	}
+	ctx := context.Background()
 
-	s.inventoryClient.On("ListParts", s.ctx, model.Filter{UUIDs: partUUIDs}).Return(parts, nil)
+	s.inventoryClient.On("ListParts", ctx, model.Filter{UUIDs: partUUIDs}).Return(parts, nil)
 	s.orderRepository.On(
 		"Update",
-		s.ctx,
+		ctx,
 		mock.AnythingOfType("string"),
 		mock.AnythingOfType("model.OrderInfo"),
 	).Return(fmt.Errorf("db update failed"))
 
-	result, err := s.service.Create(s.ctx, model.CreateOrderReq{
+	result, err := s.service.Create(ctx, model.CreateOrderReq{
 		UserUUID:  userUUID,
 		PartsUUID: partUUIDs,
 	})
@@ -80,12 +84,13 @@ func (s *ServiceSuit) TestCreateOrderUpdateError() {
 
 func (s *ServiceSuit) TestCreateOrderEmptyParts() {
 	userUUID := gofakeit.UUID()
-	partUUIDs := []string{} // пустой список
+	partUUIDs := []string{}
+	ctx := context.Background()
 
-	s.inventoryClient.On("ListParts", s.ctx, model.Filter{UUIDs: partUUIDs}).Return([]model.Part{}, nil)
-	s.orderRepository.On("Update", s.ctx, mock.AnythingOfType("string"), mock.AnythingOfType("model.OrderInfo")).Return(nil)
+	s.inventoryClient.On("ListParts", ctx, model.Filter{UUIDs: partUUIDs}).Return([]model.Part{}, nil)
+	s.orderRepository.On("Update", ctx, mock.AnythingOfType("string"), mock.AnythingOfType("model.OrderInfo")).Return(nil)
 
-	result, err := s.service.Create(s.ctx, model.CreateOrderReq{
+	result, err := s.service.Create(ctx, model.CreateOrderReq{
 		UserUUID:  userUUID,
 		PartsUUID: partUUIDs,
 	})

@@ -1,7 +1,6 @@
 package order
 
 import (
-	"context"
 	"testing"
 
 	clientMocks "github.com/bahmN/rocket-factory/order/internal/client/grpc/mocks"
@@ -11,7 +10,6 @@ import (
 
 type ServiceSuit struct {
 	suite.Suite
-	ctx             context.Context
 	orderRepository *mocks.OrderRepository
 	inventoryClient *clientMocks.InventoryClient
 	paymentClient   *clientMocks.PaymentClient
@@ -19,7 +17,6 @@ type ServiceSuit struct {
 }
 
 func (s *ServiceSuit) SetupTest() {
-	s.ctx = context.Background()
 	s.orderRepository = &mocks.OrderRepository{}
 	s.inventoryClient = &clientMocks.InventoryClient{}
 	s.paymentClient = &clientMocks.PaymentClient{}

@@ -34,21 +34,6 @@ const (
 	paymentGRPCPort   = "50051"
 )
 
-func convertPaymentMethod(method orderV1.PaymentMethod) paymentV1.PaymentMethod {
-	switch method {
-	case orderV1.PaymentMethodCARD:
-		return paymentV1.PaymentMethod_PAYMENT_METHOD_CARD
-	case orderV1.PaymentMethodSBP:
-		return paymentV1.PaymentMethod_PAYMENT_METHOD_SBP
-	case orderV1.PaymentMethodCREDITCARD:
-		return paymentV1.PaymentMethod_PAYMENT_METHOD_CREDIT_CARD
-	case orderV1.PaymentMethodINVESTORMONEY:
-		return paymentV1.PaymentMethod_PAYMENT_METHOD_INVESTOR_MONEY
-	default:
-		return paymentV1.PaymentMethod_PAYMENT_METHOD_UNKNOWN_UNSPECIFIED
-	}
-}
-
 func main() {
 	inventoryConn, err := grpc.NewClient(
 		"localhost:"+inventoryGRPCPort,
@@ -89,7 +74,7 @@ func main() {
 
 	orderServer, err := orderV1.NewServer(api)
 	if err != nil {
-		log.Fatalf("Failed to create server: %v", err)
+		panic("Failed to create server: %v" + err.Error())
 	}
 
 	r := chi.NewRouter()

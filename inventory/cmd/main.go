@@ -18,7 +18,7 @@ import (
 const grpcPort = ":50053"
 
 func main() {
-	lis, err := net.Listen("tcp", grpcPort)
+	lis, err := net.Listen("tcp", "localhost"+grpcPort)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}

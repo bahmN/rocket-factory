@@ -5,7 +5,6 @@ import (
 	orderV1 "github.com/bahmN/rocket-factory/shared/pkg/openapi/order/v1"
 	"github.com/go-faster/jx"
 	"github.com/google/uuid"
-	"github.com/samber/lo"
 )
 
 func convertStringsToRaw(parts []string) []jx.Raw {
@@ -16,16 +15,20 @@ func convertStringsToRaw(parts []string) []jx.Raw {
 	return raws
 }
 
-func CreateOrderToModel(order *orderV1.CreateOrderRequest) model.CreateOrderReq {
-	partsUUIDs := lo.Map(order.PartsUUID, func(item jx.Raw, _ int) string {
-		id, _ := uuid.Parse(string(item))
+func CreateOrderToModel(order *orderV1.CreateOrderRequest) (model.CreateOrderReq, error) {
+	partsUUIDs := make([]string, 0, len(order.PartsUUID))
+	for _, item := range order.PartsUUID {
+		id, err := uuid.Parse(string(item))
+		if err != nil {
+			return model.CreateOrderReq{}, err
+		}
+		partsUUIDs = append(partsUUIDs, id.String())
+	}
 
-		return id.String()
-	})
 	return model.CreateOrderReq{
 		UserUUID:  order.UserUUID,
 		PartsUUID: partsUUIDs,
-	}
+	}, nil
 }
 
 func CreateOrderToAPI(order *model.CreateOrderResp) *orderV1.CreateOrderResponse {

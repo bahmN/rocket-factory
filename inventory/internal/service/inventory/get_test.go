@@ -1,6 +1,7 @@
 package inventory
 
 import (
+	"context"
 	"errors"
 
 	"github.com/bahmN/rocket-factory/inventory/internal/model"
@@ -14,18 +15,21 @@ func (s *ServiceSuit) TestGetPartSuccess() {
 		Price: gofakeit.Price(1000, 5000),
 	}
 
-	s.inventoryRepository.On("GetPart", s.ctx, partUUID).Return(expectedPart, nil)
+	ctx := context.Background()
+	s.inventoryRepository.On("GetPart", ctx, partUUID).Return(expectedPart, nil)
 
-	result, err := s.service.GetPart(s.ctx, partUUID)
+	result, err := s.service.GetPart(ctx, partUUID)
 	s.Require().NoError(err)
 	s.Equal(expectedPart, result)
 }
 
 func (s *ServiceSuit) TestGetPartRepoError() {
 	partUUID := gofakeit.UUID()
-	s.inventoryRepository.On("GetPart", s.ctx, partUUID).Return(model.Part{}, errors.New("repo error"))
 
-	result, err := s.service.GetPart(s.ctx, partUUID)
+	ctx := context.Background()
+	s.inventoryRepository.On("GetPart", ctx, partUUID).Return(model.Part{}, errors.New("repo error"))
+
+	result, err := s.service.GetPart(ctx, partUUID)
 	s.Require().Error(err)
 	s.Equal(model.Part{}, result)
 }

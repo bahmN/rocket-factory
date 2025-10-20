@@ -1,6 +1,7 @@
 package inventory
 
 import (
+	"context"
 	"errors"
 
 	"github.com/bahmN/rocket-factory/inventory/internal/model"
@@ -14,18 +15,21 @@ func (s *ServiceSuit) TestListPartsSuccess() {
 		{UUID: filter.UUIDs[1], Price: gofakeit.Price(1000, 5000)},
 	}
 
-	s.inventoryRepository.On("ListParts", s.ctx, filter).Return(expectedParts, nil)
+	ctx := context.Background()
+	s.inventoryRepository.On("ListParts", ctx, filter).Return(expectedParts, nil)
 
-	result, err := s.service.ListParts(s.ctx, filter)
+	result, err := s.service.ListParts(ctx, filter)
 	s.Require().NoError(err)
 	s.Equal(expectedParts, result)
 }
 
 func (s *ServiceSuit) TestListPartsRepoError() {
 	filter := model.Filter{UUIDs: []string{gofakeit.UUID()}}
-	s.inventoryRepository.On("ListParts", s.ctx, filter).Return(nil, errors.New("repo error"))
+	ctx := context.Background()
 
-	result, err := s.service.ListParts(s.ctx, filter)
+	s.inventoryRepository.On("ListParts", ctx, filter).Return(nil, errors.New("repo error"))
+
+	result, err := s.service.ListParts(ctx, filter)
 	s.Require().Error(err)
 	s.Nil(result)
 }

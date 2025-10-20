@@ -16,7 +16,15 @@ func (a *api) CreateOrder(ctx context.Context, req *orderV1.CreateOrderRequest) 
 		}, nil
 	}
 
-	orderResponse, err := a.orderService.Create(ctx, converter.CreateOrderToModel(req))
+	order, err := converter.CreateOrderToModel(req)
+	if err != nil {
+		return &orderV1.InternalServerError{
+			Code:    500,
+			Message: fmt.Sprintf("internal service error: %v", err),
+		}, nil
+	}
+
+	orderResponse, err := a.orderService.Create(ctx, order)
 	if err != nil {
 		return &orderV1.InternalServerError{
 			Code:    500,

@@ -1,6 +1,8 @@
 package payment
 
 import (
+	"context"
+
 	"github.com/bahmN/rocket-factory/payment/internal/model"
 	"github.com/brianvoe/gofakeit/v7"
 )
@@ -12,7 +14,8 @@ func (s *ServiceSuit) TestPayOrderSuccess() {
 		PaymentMethod: int32(gofakeit.Float32Range(0, 4)),
 	}
 
-	uuid, err := s.service.PayOrder(s.ctx, paymentInfo)
+	ctx := context.Background()
+	uuid, err := s.service.PayOrder(ctx, paymentInfo)
 
 	s.Require().NoError(err)
 	s.NotNil(uuid)

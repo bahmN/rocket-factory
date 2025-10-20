@@ -2,6 +2,7 @@ package order
 
 import (
 	"context"
+	"errors"
 
 	"github.com/bahmN/rocket-factory/order/internal/model"
 )
@@ -13,6 +14,10 @@ func (s *service) Cancel(ctx context.Context, uuid string) (string, error) {
 
 	order, err := s.repo.Get(ctx, uuid)
 	if err != nil {
+		if errors.Is(err, model.ErrOrderNotFound) {
+			return "", model.ErrOrderNotFound
+		}
+
 		return "", err
 	}
 
