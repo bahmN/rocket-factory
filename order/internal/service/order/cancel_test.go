@@ -21,9 +21,8 @@ func (s *ServiceSuit) TestCancelOrderSuccess() {
 	s.orderRepository.On("Get", ctx, orderUUID).Return(order, nil)
 	s.orderRepository.On("Update", ctx, orderUUID, mock.AnythingOfType("model.OrderInfo")).Return(nil)
 
-	result, err := s.service.Cancel(ctx, orderUUID)
+	err := s.service.Cancel(ctx, orderUUID)
 	s.Require().NoError(err)
-	s.Equal("order cancelled", result)
 	s.orderRepository.AssertCalled(s.T(), "Update", ctx, orderUUID, mock.MatchedBy(func(o model.OrderInfo) bool {
 		return o.Status == model.OrderStatusCANCELLED
 	}))
@@ -31,10 +30,9 @@ func (s *ServiceSuit) TestCancelOrderSuccess() {
 
 func (s *ServiceSuit) TestCancelOrderEmptyUUID() {
 	ctx := context.Background()
-	result, err := s.service.Cancel(ctx, "")
+	err := s.service.Cancel(ctx, "")
 
 	s.Require().ErrorIs(err, model.ErrEmptyUUID)
-	s.Equal("", result)
 }
 
 func (s *ServiceSuit) TestCancelOrderRepoError() {
@@ -43,9 +41,8 @@ func (s *ServiceSuit) TestCancelOrderRepoError() {
 
 	s.orderRepository.On("Get", ctx, orderUUID).Return(model.OrderInfo{}, errors.New("repo error"))
 
-	result, err := s.service.Cancel(ctx, orderUUID)
+	err := s.service.Cancel(ctx, orderUUID)
 	s.Require().Error(err)
-	s.Equal("", result)
 }
 
 func (s *ServiceSuit) TestCancelOrderAlreadyPaidOrCancelled() {
@@ -58,7 +55,6 @@ func (s *ServiceSuit) TestCancelOrderAlreadyPaidOrCancelled() {
 
 	s.orderRepository.On("Get", ctx, orderUUID).Return(order, nil)
 
-	result, err := s.service.Cancel(ctx, orderUUID)
+	err := s.service.Cancel(ctx, orderUUID)
 	s.Require().ErrorIs(err, model.ErrOrderPaidOrCanceled)
-	s.Equal("", result)
 }
