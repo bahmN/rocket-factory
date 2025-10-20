@@ -37,4 +37,3 @@ jobs:
     with:
       modules: ${{ needs.extract-vars.outputs.modules }}
       go-version: ${{ needs.extract-vars.outputs.go-version }}
-      golangci-lint-version: ${{ needs.extract-vars.outputs.golangci-lint-version }}
