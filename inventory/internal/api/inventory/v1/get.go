@@ -2,6 +2,7 @@ package v1
 
 import (
 	"context"
+	"log"
 
 	"github.com/bahmN/rocket-factory/inventory/internal/converter"
 	"github.com/bahmN/rocket-factory/inventory/internal/model"
@@ -18,7 +19,9 @@ func (a *api) GetPart(ctx context.Context, req *inventoryV1.GetPartRequest) (*in
 			return nil, status.Errorf(codes.NotFound, "part with %v uuid not found", req.Uuid)
 		}
 
-		return nil, err
+		log.Printf("unknown error: %v", err)
+
+		return nil, status.Error(codes.Unknown, err.Error())
 	}
 
 	return &inventoryV1.GetPartResponse{
