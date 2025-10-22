@@ -683,6 +683,7 @@ var (
 		(*structpb.Value)(nil),        // 11: google.protobuf.Value
 	}
 )
+
 var file_inventory_v1_inventory_proto_depIdxs = []int32{
 	5,  // 0: inventory.v1.GetPartResponse.part:type_name -> inventory.v1.Part
 	6,  // 1: inventory.v1.ListPartsRequest.filter:type_name -> inventory.v1.PartsFilter
