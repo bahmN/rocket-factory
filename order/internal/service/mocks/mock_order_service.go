@@ -23,31 +23,21 @@ func (_m *OrderService) EXPECT() *OrderService_Expecter {
 }
 
 // Cancel provides a mock function with given fields: ctx, uuid
-func (_m *OrderService) Cancel(ctx context.Context, uuid string) (string, error) {
+func (_m *OrderService) Cancel(ctx context.Context, uuid string) error {
 	ret := _m.Called(ctx, uuid)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Cancel")
 	}
 
-	var r0 string
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (string, error)); ok {
-		return rf(ctx, uuid)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) string); ok {
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
 		r0 = rf(ctx, uuid)
 	} else {
-		r0 = ret.Get(0).(string)
+		r0 = ret.Error(0)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, uuid)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }
 
 // OrderService_Cancel_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Cancel'
@@ -69,12 +59,12 @@ func (_c *OrderService_Cancel_Call) Run(run func(ctx context.Context, uuid strin
 	return _c
 }
 
-func (_c *OrderService_Cancel_Call) Return(_a0 string, _a1 error) *OrderService_Cancel_Call {
-	_c.Call.Return(_a0, _a1)
+func (_c *OrderService_Cancel_Call) Return(_a0 error) *OrderService_Cancel_Call {
+	_c.Call.Return(_a0)
 	return _c
 }
 
-func (_c *OrderService_Cancel_Call) RunAndReturn(run func(context.Context, string) (string, error)) *OrderService_Cancel_Call {
+func (_c *OrderService_Cancel_Call) RunAndReturn(run func(context.Context, string) error) *OrderService_Cancel_Call {
 	_c.Call.Return(run)
 	return _c
 }

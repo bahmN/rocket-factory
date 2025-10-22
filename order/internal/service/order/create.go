@@ -34,7 +34,7 @@ func (s *service) Create(ctx context.Context, req model.CreateOrderReq) (model.C
 		Status:     model.OrderStatusPENDINGPAYMENT,
 	}
 
-	err = s.repo.Update(ctx, orderUUID, newOrder)
+	err = s.repo.Create(ctx, newOrder)
 	if err != nil {
 		return model.CreateOrderResp{}, err
 	}

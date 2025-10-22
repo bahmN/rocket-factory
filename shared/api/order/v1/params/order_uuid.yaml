@@ -4,7 +4,6 @@ required: true
 description: UUID заказа, для которого требуется выполнить запрос
 schema:
   type: string
-#  format: uuid todo
   minLength: 1
   maxLength: 36
   example: string

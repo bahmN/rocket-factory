@@ -16,3 +16,13 @@ func OrderToModel(order repoModel.OrderInfo) model.OrderInfo {
 		Status:          order.Status,
 	}
 }
+
+func OrderInfoToRepo(order model.OrderInfo) *repoModel.OrderInfo {
+	return &repoModel.OrderInfo{
+		OrderUUID:  order.OrderUUID,
+		UserUUID:   order.UserUUID,
+		PartUUIDs:  order.PartUUIDs,
+		TotalPrice: order.TotalPrice,
+		Status:     order.Status,
+	}
+}

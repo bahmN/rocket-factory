@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/bahmN/rocket-factory/order/internal/model"
+	"github.com/samber/lo"
 )
 
 func (r *repository) Update(ctx context.Context, uuid string, info model.OrderInfo) error {
@@ -12,15 +13,19 @@ func (r *repository) Update(ctx context.Context, uuid string, info model.OrderIn
 
 	order := r.data[uuid]
 
-	if info.OrderUUID != "" {
+	if lo.IsNil(order) {
+		return model.ErrOrderNotFound
+	}
+
+	if lo.IsNotEmpty(info.OrderUUID) {
 		order.OrderUUID = info.OrderUUID
 	}
 
-	if info.UserUUID != "" {
+	if lo.IsNotEmpty(info.UserUUID) {
 		order.UserUUID = info.UserUUID
 	}
 
-	if info.PartUUIDs != nil {
+	if lo.IsNotNil(info.PartUUIDs) {
 		order.PartUUIDs = info.PartUUIDs
 	}
 
@@ -28,15 +33,15 @@ func (r *repository) Update(ctx context.Context, uuid string, info model.OrderIn
 		order.TotalPrice = info.TotalPrice
 	}
 
-	if info.TransactionUUID != nil {
+	if lo.IsNotNil(info.TransactionUUID) {
 		order.TransactionUUID = info.TransactionUUID
 	}
 
-	if info.PaymentMethod != nil {
+	if lo.IsNotNil(info.PaymentMethod) {
 		order.PaymentMethod = info.PaymentMethod
 	}
 
-	if info.Status != "" {
+	if lo.IsNotEmpty(info.Status) {
 		order.Status = info.Status
 	}
 
