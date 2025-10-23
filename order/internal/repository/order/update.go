@@ -2,50 +2,49 @@ package order
 
 import (
 	"context"
+	"log"
+	"time"
 
+	sq "github.com/Masterminds/squirrel"
 	"github.com/bahmN/rocket-factory/order/internal/model"
+	repoModel "github.com/bahmN/rocket-factory/order/internal/repository/model"
 	"github.com/samber/lo"
 )
 
 func (r *repository) Update(ctx context.Context, uuid string, info model.OrderInfo) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	updateBuilder := sq.Update(repoModel.TableOrders).
+		PlaceholderFormat(sq.Dollar).
+		Where(sq.Eq{repoModel.FieldOrderUUID: uuid}).
+		Set(repoModel.FieldUserUUID, info.UserUUID).
+		Set(repoModel.FieldPartUUIDs, info.PartUUIDs).
+		Set(repoModel.FieldTotalPrice, info.TotalPrice).
+		Set(repoModel.FieldStatus, info.Status).
+		Set(repoModel.FieldUpdatedAt, time.Now())
 
-	order := r.data[uuid]
+	if lo.IsNotEmpty(info.TransactionUUID) {
+		updateBuilder = updateBuilder.Set(repoModel.FieldTransactionUUID, info.TransactionUUID)
+	}
 
-	if lo.IsNil(order) {
+	if lo.IsNotEmpty(info.PaymentMethod) {
+		updateBuilder = updateBuilder.Set(repoModel.FieldPaymentMethod, info.PaymentMethod)
+	}
+
+	query, args, err := updateBuilder.ToSql()
+	if err != nil {
+		log.Printf("failed to build sql query: %v", err)
+		return err
+	}
+
+	result, err := r.pool.Exec(ctx, query, args...)
+	if err != nil {
+		log.Printf("failed to update order: %v", err)
+		return err
+	}
+
+	if result.RowsAffected() == 0 {
 		return model.ErrOrderNotFound
 	}
 
-	if lo.IsNotEmpty(info.OrderUUID) {
-		order.OrderUUID = info.OrderUUID
-	}
-
-	if lo.IsNotEmpty(info.UserUUID) {
-		order.UserUUID = info.UserUUID
-	}
-
-	if lo.IsNotNil(info.PartUUIDs) {
-		order.PartUUIDs = info.PartUUIDs
-	}
-
-	if info.TotalPrice > 0 {
-		order.TotalPrice = info.TotalPrice
-	}
-
-	if lo.IsNotNil(info.TransactionUUID) {
-		order.TransactionUUID = info.TransactionUUID
-	}
-
-	if lo.IsNotNil(info.PaymentMethod) {
-		order.PaymentMethod = info.PaymentMethod
-	}
-
-	if lo.IsNotEmpty(info.Status) {
-		order.Status = info.Status
-	}
-
-	r.data[uuid] = order
-
+	log.Printf("order with UUID %v updated successfully", uuid)
 	return nil
 }
