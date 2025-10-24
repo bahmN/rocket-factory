@@ -1,13 +1,15 @@
 package part
 
 import (
+	"context"
 	"time"
 
 	repoModel "github.com/bahmN/rocket-factory/inventory/internal/repository/model"
 	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
-func (r *repository) InitTestData() {
+func (r *repository) InitTestData(ctx context.Context) error {
 	parts := []*repoModel.Part{
 		{
 			UUID:          uuid.NewString(),
@@ -15,7 +17,7 @@ func (r *repository) InitTestData() {
 			Description:   "Мощный ракетный двигатель",
 			Price:         15000.0,
 			StockQuantity: 5,
-			Category:      1, // например, 1 = ENGINE
+			Category:      1, // ENGINE
 			Dimensions: &repoModel.Dimensions{
 				Length: 200,
 				Width:  100,
@@ -24,7 +26,7 @@ func (r *repository) InitTestData() {
 			},
 			Manufacturer: &repoModel.Manufacturer{
 				Name:    "RocketMotors",
-				Cuntry:  "Russia",
+				Country: "Russia",
 				Website: "https://rocketmotors.example.com",
 			},
 			Tags:      []string{"основной", "мотор"},
@@ -38,7 +40,7 @@ func (r *repository) InitTestData() {
 			Description:   "Бак для хранения топлива",
 			Price:         8000.0,
 			StockQuantity: 8,
-			Category:      2, // например, 2 = FUEL
+			Category:      2, // FUEL
 			Dimensions: &repoModel.Dimensions{
 				Length: 150,
 				Width:  150,
@@ -47,7 +49,7 @@ func (r *repository) InitTestData() {
 			},
 			Manufacturer: &repoModel.Manufacturer{
 				Name:    "FuelTech",
-				Cuntry:  "Germany",
+				Country: "Germany",
 				Website: "https://fueltech.example.com",
 			},
 			Tags:      []string{"топливо", "бак"},
@@ -61,7 +63,7 @@ func (r *repository) InitTestData() {
 			Description:   "Прочный иллюминатор для ракеты",
 			Price:         3000.0,
 			StockQuantity: 15,
-			Category:      3, // например, 3 = PORTHOLE
+			Category:      3, // PORTHOLE
 			Dimensions: &repoModel.Dimensions{
 				Length: 50,
 				Width:  50,
@@ -70,7 +72,7 @@ func (r *repository) InitTestData() {
 			},
 			Manufacturer: &repoModel.Manufacturer{
 				Name:    "GlassSpace",
-				Cuntry:  "USA",
+				Country: "USA",
 				Website: "https://glassspace.example.com",
 			},
 			Tags:      []string{"стекло", "иллюминатор"},
@@ -84,7 +86,7 @@ func (r *repository) InitTestData() {
 			Description:   "Аэродинамическое крыло",
 			Price:         5000.0,
 			StockQuantity: 12,
-			Category:      4, // например, 4 = WING
+			Category:      4, // WING
 			Dimensions: &repoModel.Dimensions{
 				Length: 300,
 				Width:  50,
@@ -93,7 +95,7 @@ func (r *repository) InitTestData() {
 			},
 			Manufacturer: &repoModel.Manufacturer{
 				Name:    "WingPro",
-				Cuntry:  "France",
+				Country: "France",
 				Website: "https://wingpro.example.com",
 			},
 			Tags:      []string{"крыло", "аэродинамика"},
@@ -107,7 +109,7 @@ func (r *repository) InitTestData() {
 			Description:   "Электронная панель управления",
 			Price:         7000.0,
 			StockQuantity: 7,
-			Category:      0, // например, 0 = UNKNOWN
+			Category:      0, // UNKNOWN
 			Dimensions: &repoModel.Dimensions{
 				Length: 80,
 				Width:  40,
@@ -116,7 +118,7 @@ func (r *repository) InitTestData() {
 			},
 			Manufacturer: &repoModel.Manufacturer{
 				Name:    "ControlSys",
-				Cuntry:  "Japan",
+				Country: "Japan",
 				Website: "https://controlsys.example.com",
 			},
 			Tags:      []string{"электроника", "панель"},
@@ -126,7 +128,22 @@ func (r *repository) InitTestData() {
 		},
 	}
 
-	for _, part := range parts {
-		r.data[part.UUID] = part
+	// Очистим коллекцию перед вставкой, чтобы не дублировать
+	if _, err := r.coll.DeleteMany(ctx, bson.M{}); err != nil {
+		return err
 	}
+
+	// Преобразуем []interface{} для bulk вставки
+	docs := make([]interface{}, len(parts))
+	for i, part := range parts {
+		docs[i] = part
+	}
+
+	// Вставляем все документы
+	_, err := r.coll.InsertMany(ctx, docs)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
