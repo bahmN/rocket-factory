@@ -2,12 +2,14 @@ package order
 
 import (
 	"context"
+	"errors"
 	"log"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/bahmN/rocket-factory/order/internal/model"
 	"github.com/bahmN/rocket-factory/order/internal/repository/converter"
 	repoModel "github.com/bahmN/rocket-factory/order/internal/repository/model"
+	"github.com/jackc/pgx/v5"
 )
 
 func (r *repository) Get(ctx context.Context, uuid string) (model.OrderInfo, error) {
@@ -35,6 +37,10 @@ func (r *repository) Get(ctx context.Context, uuid string) (model.OrderInfo, err
 		&order.UpdatedAt,
 	)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return model.OrderInfo{}, model.ErrOrderNotFound
+		}
+
 		log.Printf("failed to get order: %v", err)
 		return model.OrderInfo{}, err
 	}
