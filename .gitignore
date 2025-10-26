@@ -18,7 +18,8 @@
 # vendor/
 
 # env file
-.env
+order/.env
+inventory/.env
 /.idea
 /.vscode
 /.cursor

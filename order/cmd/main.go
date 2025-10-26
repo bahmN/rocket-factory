@@ -14,6 +14,7 @@ import (
 	orderV1API "github.com/bahmN/rocket-factory/order/internal/api/order/v1"
 	inventoryClient "github.com/bahmN/rocket-factory/order/internal/client/grpc/inventory/v1"
 	paymentClient "github.com/bahmN/rocket-factory/order/internal/client/grpc/payment/v1"
+	"github.com/bahmN/rocket-factory/order/internal/migrator"
 	orderRepository "github.com/bahmN/rocket-factory/order/internal/repository/order"
 	orderService "github.com/bahmN/rocket-factory/order/internal/service/order"
 	orderV1 "github.com/bahmN/rocket-factory/shared/pkg/openapi/order/v1"
@@ -21,6 +22,9 @@ import (
 	paymentV1 "github.com/bahmN/rocket-factory/shared/pkg/proto/payment/v1"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/stdlib"
+	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -35,6 +39,30 @@ const (
 )
 
 func main() {
+	ctx := context.Background()
+
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatalf("failed to load .env file: %v\n", err)
+	}
+
+	dbURI := os.Getenv("PG_URI")
+
+	pool, err := pgxpool.New(ctx, dbURI)
+	if err != nil {
+		log.Fatalf("failed to connect to database: %v\n", err)
+	}
+	defer pool.Close()
+
+	migrationsDir := os.Getenv("MIGRATIONS_DIR")
+	migratorRunner := migrator.NewMigrator(stdlib.OpenDB(*pool.Config().ConnConfig), migrationsDir)
+
+	err = migratorRunner.Up()
+	if err != nil {
+		log.Printf("db migration error: %v\n", err)
+		return
+	}
+
 	inventoryConn, err := grpc.NewClient(
 		"localhost:"+inventoryGRPCPort,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -65,7 +93,7 @@ func main() {
 	}()
 	pClient := paymentV1.NewPaymentServiceClient(paymentConn)
 
-	repository := orderRepository.NewRepository()
+	repository := orderRepository.NewRepository(pool)
 	service := orderService.NewService(
 		repository,
 		inventoryClient.NewClient(iClient),

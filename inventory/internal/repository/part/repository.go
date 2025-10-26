@@ -1,21 +1,39 @@
 package part
 
 import (
-	"sync"
+	"context"
+	"time"
 
 	def "github.com/bahmN/rocket-factory/inventory/internal/repository"
-	repoModel "github.com/bahmN/rocket-factory/inventory/internal/repository/model"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var _ def.InventoryRepository = (*repository)(nil)
 
 type repository struct {
-	mu   sync.RWMutex
-	data map[string]*repoModel.Part
+	coll *mongo.Collection
 }
 
-func NewRepository() *repository {
+func NewRepository(db *mongo.Database) *repository {
+	collection := db.Collection("inventory")
+	indexModels := []mongo.IndexModel{
+		{
+			Keys:    bson.D{{Key: "title", Value: 1}},
+			Options: options.Index().SetUnique(false),
+		},
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	_, err := collection.Indexes().CreateMany(ctx, indexModels)
+	if err != nil {
+		panic(err)
+	}
+
 	return &repository{
-		data: make(map[string]*repoModel.Part),
+		coll: collection,
 	}
 }
