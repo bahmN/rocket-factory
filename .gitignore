@@ -18,8 +18,10 @@
 # vendor/
 
 # env file
-order/.env
-inventory/.env
+/deploy/compose/inventory/.env
+/deploy/compose/order/.env
+/deploy/compose/payment/.env
+
 /.idea
 /.vscode
 /.cursor
