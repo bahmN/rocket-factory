@@ -50,10 +50,10 @@ func (d *diContainer) InventoryService(ctx context.Context) service.InventorySer
 
 func (d *diContainer) InventoryRepository(ctx context.Context) repository.InventoryRepository {
 	if d.inventoryRepository == nil {
-		d.inventoryRepository = inventoryRepository.NewRepository(d.MongoDBHandle(ctx))
+		d.inventoryRepository = inventoryRepository.NewRepository(ctx, d.MongoDBHandle(ctx))
 	}
 
-	return d.inventoryService
+	return d.inventoryRepository
 }
 
 func (d *diContainer) MongoDBClient(ctx context.Context) *mongo.Client {

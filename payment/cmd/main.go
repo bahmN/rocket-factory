@@ -1,53 +1,51 @@
 package main
 
 import (
-	"log"
-	"net"
-	"os"
+	"context"
+	"fmt"
 	"os/signal"
 	"syscall"
+	"time"
 
-	apiService "github.com/bahmN/rocket-factory/payment/internal/api/payment/v1"
-	"github.com/bahmN/rocket-factory/payment/internal/interceptor"
-	paymentService "github.com/bahmN/rocket-factory/payment/internal/service/payment"
-	paymentV1 "github.com/bahmN/rocket-factory/shared/pkg/proto/payment/v1"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
+	"github.com/bahmN/rocket-factory/payment/internal/app"
+	"github.com/bahmN/rocket-factory/payment/internal/config"
+	"github.com/bahmN/rocket-factory/platform/pkg/closer"
+	"github.com/bahmN/rocket-factory/platform/pkg/logger"
+	"go.uber.org/zap"
 )
 
-const grpcPort = ":50051"
+const configPath = "../deploy/compose/payment/.env"
 
 func main() {
-	lis, err := net.Listen("tcp", "localhost"+grpcPort)
+	err := config.Load(configPath)
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		panic(fmt.Errorf("failed to load config: %w", err))
 	}
 
-	s := grpc.NewServer(
-		grpc.ChainUnaryInterceptor(
-			grpc.UnaryServerInterceptor(interceptor.ValidatorInterceptor()),
-		),
-	)
+	appCtx, appCancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer appCancel()
+	defer gracefulShutdown()
 
-	service := paymentService.NewService()
-	api := apiService.NewAPI(service)
+	closer.Configure(syscall.SIGINT, syscall.SIGTERM)
 
-	paymentV1.RegisterPaymentServiceServer(s, api)
+	a, err := app.New(appCtx)
+	if err != nil {
+		logger.Error(appCtx, "error in create app", zap.Error(err))
+		return
+	}
 
-	reflection.Register(s)
+	err = a.Run(appCtx)
+	if err != nil {
+		logger.Error(appCtx, "error when the application is running", zap.Error(err))
+		return
+	}
+}
 
-	go func() {
-		log.Printf("gRPC server listening on %s\n", grpcPort)
-		if err := s.Serve(lis); err != nil {
-			log.Printf("failed to serve: %v", err)
-			return
-		}
-	}()
+func gracefulShutdown() {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-	log.Println("Shutting down server...")
-	s.GracefulStop()
-	log.Println("Server gracefully stopped")
+	if err := closer.CloseAll(ctx); err != nil {
+		logger.Error(ctx, "❌ Ошибка при завершении работы", zap.Error(err))
+	}
 }

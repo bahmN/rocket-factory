@@ -18,7 +18,7 @@ import (
 
 type App struct {
 	diContainer *diContainer
-	gRPCService *grpc.Server
+	gRPCServer  *grpc.Server
 	listener    net.Listener
 }
 
@@ -93,17 +93,17 @@ func (a *App) initListener(_ context.Context) error {
 }
 
 func (a *App) initGRPCServer(ctx context.Context) error {
-	a.gRPCService = grpc.NewServer(grpc.Creds(insecure.NewCredentials()))
+	a.gRPCServer = grpc.NewServer(grpc.Creds(insecure.NewCredentials()))
 	closer.AddNamed("gRPC server", func(ctx context.Context) error {
-		a.gRPCService.GracefulStop()
+		a.gRPCServer.GracefulStop()
 		return nil
 	})
 
-	reflection.Register(a.gRPCService)
+	reflection.Register(a.gRPCServer)
 
-	health.RegisterService(a.gRPCService)
+	health.RegisterService(a.gRPCServer)
 
-	inventoryV1.RegisterInventoryServiceServer(a.gRPCService, a.diContainer.InventoryV1API(ctx))
+	inventoryV1.RegisterInventoryServiceServer(a.gRPCServer, a.diContainer.InventoryV1API(ctx))
 
 	return nil
 }
@@ -111,7 +111,7 @@ func (a *App) initGRPCServer(ctx context.Context) error {
 func (a *App) runGRPCServer(ctx context.Context) error {
 	logger.Info(ctx, fmt.Sprintf("gRPC InventoryService server listening on %s", config.AppConfig().InventoryGRPC.Address()))
 
-	err := a.gRPCService.Serve(a.listener)
+	err := a.gRPCServer.Serve(a.listener)
 	if err != nil {
 		return err
 	}

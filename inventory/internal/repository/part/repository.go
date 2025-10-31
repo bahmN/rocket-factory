@@ -16,8 +16,9 @@ type repository struct {
 	coll *mongo.Collection
 }
 
-func NewRepository(db *mongo.Database) *repository {
+func NewRepository(ctx context.Context, db *mongo.Database) *repository {
 	collection := db.Collection("inventory")
+
 	indexModels := []mongo.IndexModel{
 		{
 			Keys:    bson.D{{Key: "title", Value: 1}},
@@ -25,10 +26,11 @@ func NewRepository(db *mongo.Database) *repository {
 		},
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	// Используем переданный ctx с таймаутом
+	timeoutCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
-	_, err := collection.Indexes().CreateMany(ctx, indexModels)
+	_, err := collection.Indexes().CreateMany(timeoutCtx, indexModels)
 	if err != nil {
 		panic(err)
 	}
