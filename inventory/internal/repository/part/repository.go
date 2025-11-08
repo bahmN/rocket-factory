@@ -17,7 +17,7 @@ type repository struct {
 }
 
 func NewRepository(ctx context.Context, db *mongo.Database) *repository {
-	collection := db.Collection("inventory")
+	collection := db.Collection("parts")
 
 	indexModels := []mongo.IndexModel{
 		{
