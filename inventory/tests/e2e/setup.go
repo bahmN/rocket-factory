@@ -5,18 +5,20 @@ import (
 	"os"
 	"time"
 
+	"github.com/docker/go-connections/nat"
+	"github.com/testcontainers/testcontainers-go/wait"
+	"go.uber.org/zap"
+
 	"github.com/bahmN/rocket-factory/platform/pkg/logger"
 	"github.com/bahmN/rocket-factory/platform/pkg/testcontainers"
 	"github.com/bahmN/rocket-factory/platform/pkg/testcontainers/app"
 	"github.com/bahmN/rocket-factory/platform/pkg/testcontainers/mongo"
 	"github.com/bahmN/rocket-factory/platform/pkg/testcontainers/network"
 	"github.com/bahmN/rocket-factory/platform/pkg/testcontainers/path"
-	"github.com/docker/go-connections/nat"
-	"github.com/testcontainers/testcontainers-go/wait"
-	"go.uber.org/zap"
 )
 
 const (
+	// Параметры для контейнеров
 	inventoryAppName    = "inventory-app"
 	inventoryDockerfile = "deploy/docker/inventory/Dockerfile"
 
@@ -51,7 +53,7 @@ func setupTestEnvironment(ctx context.Context) *TestEnvironment {
 	mongoPassword := getEnvWithLogging(ctx, testcontainers.MongoPasswordKey)
 	mongoImageName := getEnvWithLogging(ctx, testcontainers.MongoImageNameKey)
 	mongoDatabase := getEnvWithLogging(ctx, testcontainers.MongoDatabaseKey)
-
+	mongoAuthDb := getEnvWithLogging(ctx, testcontainers.MongoAuthDBKey)
 	// Получаем порт gRPC для waitStrategy
 	grpcPort := getEnvWithLogging(ctx, grpcPortKey)
 
@@ -62,6 +64,7 @@ func setupTestEnvironment(ctx context.Context) *TestEnvironment {
 		mongo.WithImageName(mongoImageName),
 		mongo.WithDatabase(mongoDatabase),
 		mongo.WithAuth(mongoUsername, mongoPassword),
+		mongo.WithAuthDB(mongoAuthDb),
 		mongo.WithLogger(logger.Logger()),
 	)
 	if err != nil {
@@ -74,8 +77,10 @@ func setupTestEnvironment(ctx context.Context) *TestEnvironment {
 	projectRoot := path.GetProjectRoot()
 
 	appEnv := map[string]string{
+		testcontainers.GrpcHostKey: testcontainers.GrpcHost,
 		// Переопределяем хост MongoDB для подключения к контейнеру из testcontainers
 		testcontainers.MongoHostKey: generatedMongo.Config().ContainerName,
+		testcontainers.MongoPortKey: testcontainers.MongoPort,
 	}
 
 	// Создаем настраиваемую стратегию ожидания с увеличенным таймаутом

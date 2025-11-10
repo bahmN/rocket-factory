@@ -14,7 +14,7 @@ import (
 	"go.uber.org/zap"
 )
 
-const configPath = ".env"
+const configPath = "../deploy/compose/inventory/.env"
 
 func main() {
 	err := config.Load(configPath)

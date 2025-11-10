@@ -2,6 +2,10 @@ package testcontainers
 
 // MongoDB constants
 const (
+	// Переопределяем grpc host т.к. из вне по localhost не достучаться
+	GrpcHostKey = "GRPC_HOST"
+	GrpcHost    = "0.0.0.0"
+
 	// MongoDB container constants
 	MongoContainerName = "mongo"
 	MongoPort          = "27017"

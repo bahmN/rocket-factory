@@ -14,6 +14,7 @@ jobs:
   integration-test:
     name: Run integration tests
     runs-on: ubuntu-latest
+    timeout-minutes: 30  # чтобы хватило времени на сборку контейнеров
 
     steps:
       - name: 📦 Checkout code
@@ -39,24 +40,24 @@ jobs:
       - name: 📌 Install Task
         uses: arduino/setup-task@v2.0.0
 
+      - name: 🧹 Cleanup old containers and networks
+        run: |
+          echo "🧹 Cleaning up dangling containers and networks..."
+          docker container prune -f || true
+          docker network prune -f || true
+
       - name: 📄 Генерация .env файлов
         env:
           SERVICES: "inventory,order,payment"
         run: |
-          # Генерируем все .env файлы для сервисов
           echo "Генерация .env файлов для всех сервисов..."
           task env:generate
-
-          # Проверяем результат
           echo "✅ Файлы .env для сервисов созданы"
 
       - name: 🧪 Run integration tests via Taskfile
         env:
           MODULES: ${{ inputs.modules }}
-        run: task test-integration
-
-      - name: 🧹 Cleanup Docker containers
-        if: always()
         run: |
-          echo "🧹 Cleaning up dangling containers..."
-          docker container prune -f
+          # увеличиваем таймаут для запуска контейнеров в CI
+          export TESTCONTAINERS_STARTUP_TIMEOUT=120
+          task test-integration
