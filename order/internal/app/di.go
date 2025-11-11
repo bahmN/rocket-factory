@@ -27,7 +27,7 @@ type diContainer struct {
 
 	orderRepository repository.OrderRepository
 
-	pool *pgxpool.Pool
+	dbPool *pgxpool.Pool
 
 	inventoryClient inventoryV1.InventoryServiceClient
 	paymentClient   paymentV1.PaymentServiceClient
@@ -59,23 +59,23 @@ func (d *diContainer) OrderService(ctx context.Context) service.OrderService {
 
 func (d *diContainer) OrderRepository(ctx context.Context) repository.OrderRepository {
 	if d.orderRepository == nil {
-		d.orderRepository = orderRepository.NewRepository(d.Pool(ctx))
+		d.orderRepository = orderRepository.NewRepository(d.InitDBPool(ctx))
 	}
 
 	return d.orderRepository
 }
 
-func (d *diContainer) Pool(ctx context.Context) *pgxpool.Pool {
-	if d.pool == nil {
+func (d *diContainer) InitDBPool(ctx context.Context) *pgxpool.Pool {
+	if d.dbPool == nil {
 		pool, err := pgxpool.New(ctx, config.AppConfig().Postgres.URI())
 		if err != nil {
 			panic(fmt.Sprintf("failed to create pool: %v", err))
 		}
 
-		d.pool = pool
+		d.dbPool = pool
 	}
 
-	return d.pool
+	return d.dbPool
 }
 
 func (d *diContainer) InventoryClient(ctx context.Context) inventoryV1.InventoryServiceClient {

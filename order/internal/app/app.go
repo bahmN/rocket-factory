@@ -139,7 +139,7 @@ func (a *App) runHTTPServer(ctx context.Context) error {
 }
 
 func (a *App) initMigrations(ctx context.Context) error {
-	pool := a.diContainer.Pool(ctx)
+	pool := a.diContainer.InitDBPool(ctx)
 	dir := config.AppConfig().Postgres.MigrationsDir()
 	runner := migrator.NewMigrator(stdlib.OpenDB(*pool.Config().ConnConfig), dir)
 
