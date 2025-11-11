@@ -3,6 +3,7 @@ package payment
 import (
 	"testing"
 
+	"github.com/bahmN/rocket-factory/platform/pkg/logger"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -12,6 +13,8 @@ type ServiceSuit struct {
 }
 
 func (s *ServiceSuit) SetupTest() {
+	logger.SetNopLogger()
+
 	s.service = NewService()
 }
 

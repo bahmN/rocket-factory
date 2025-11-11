@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/bahmN/rocket-factory/inventory/internal/repository/mocks"
+	"github.com/bahmN/rocket-factory/platform/pkg/logger"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -14,6 +15,8 @@ type ServiceSuit struct {
 }
 
 func (s *ServiceSuit) SetupTest() {
+	logger.SetNopLogger()
+
 	s.inventoryRepository = &mocks.InventoryRepository{}
 	s.service = NewService(s.inventoryRepository)
 }
