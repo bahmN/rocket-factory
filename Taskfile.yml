@@ -15,6 +15,7 @@ vars:
   YQ_VERSION: 'v4.45.2'
   MOCKERY_VERSION: 'v2.53.3'
   GRPCURL_VERSION: 'v1.9.3'
+  ENVSUBST_VERSION: 'v1.4.3'
 
   BIN_DIR: '{{.ROOT_DIR}}/bin'
   GOLANGCI_LINT: '{{.BIN_DIR}}/golangci-lint'
@@ -31,6 +32,8 @@ vars:
   GRPCURL: '{{.BIN_DIR}}/grpcurl'
   COVERAGE_DIR: '{{.ROOT_DIR}}/coverage'
   COVERAGE_FILE: 'coverage.out'
+  ENVSUBST: '{{.BIN_DIR}}/envsubst'
+  ENVDIR: '{{.ROOT_DIR}}/deploy/env'
 
   NODE_MODULES_DIR: '{{.ROOT_DIR}}/node_modules/.bin'
   REDOCLY: '{{.NODE_MODULES_DIR}}/redocly'
@@ -41,6 +44,7 @@ vars:
   OPEN_API_FILES: '{{.ROOT_DIR}}/shared/api/bundles'
 
   MODULES: order payment inventory
+  SERVICES: core,inventory,order,payment
 
 tasks:
   install-formatters:
@@ -328,7 +332,7 @@ tasks:
         echo "🧪 Тестирование API микросервисов через gRPC и REST"
         
         echo "📦 Тест 1: Получение списка деталей из Inventory"
-        PARTS_RESPONSE=$({{.GRPCURL}} -plaintext -d '{"filter":{}}' localhost:50053 inventory.v1.InventoryService/ListParts)
+        PARTS_RESPONSE=$({{.GRPCURL}} -plaintext -d '{"filter":{}}' localhost:50051 inventory.v1.InventoryService/ListParts)
         
         if [[ -z "$PARTS_RESPONSE" || "$PARTS_RESPONSE" == *"error"* ]]; then
           echo "❌ Не удалось получить список деталей."
@@ -347,7 +351,7 @@ tasks:
         
         echo
         echo "🔍 Тест 2: Получение информации о детали по UUID"
-        PART_RESPONSE=$({{.GRPCURL}} -plaintext -d "{\"uuid\":\"$PART_UUID\"}" localhost:50053 inventory.v1.InventoryService/GetPart)
+        PART_RESPONSE=$({{.GRPCURL}} -plaintext -d "{\"uuid\":\"$PART_UUID\"}" localhost:50051 inventory.v1.InventoryService/GetPart)
         
         if [[ -z "$PART_RESPONSE" || "$PART_RESPONSE" == *"error"* ]]; then
           echo "❌ Не удалось получить информацию о детали."
@@ -642,3 +646,65 @@ tasks:
       - task down-core
       - task down-inventory
       - task down-order
+
+  env:install-envsubst:
+    desc: "Устанавливает envsubst в bin/"
+    cmds:
+      - |
+        [ -f {{.ENVSUBST}} ] || {
+          echo "📦 Устанавливаем envsubst версии {{.ENVSUBST_VERSION}}..."
+          GOBIN={{.BIN_DIR}} go install github.com/a8m/envsubst/cmd/envsubst@{{.ENVSUBST_VERSION}}
+        }
+        echo "✅ envsubst установлен: {{.ENVSUBST}}"
+
+  env:generate:
+    desc: "Генерирует .env файлы для всех сервисов из шаблонов и единого файла конфигурации"
+    deps: [ env:install-envsubst ]
+    cmds:
+      - |
+        ENV_FILE="{{.ENVDIR}}/.env"
+        TEMPLATE_FILE="{{.ENVDIR}}/.env.template"
+        SCRIPT="{{.ENVDIR}}/generate-env.sh"
+        
+        if [ ! -f "$ENV_FILE" ]; then
+          if [ -f "$TEMPLATE_FILE" ]; then
+            echo "🔄 Файл $ENV_FILE не найден, создаем из шаблона $TEMPLATE_FILE"
+            cp "$TEMPLATE_FILE" "$ENV_FILE"
+            echo "✅ Создан файл $ENV_FILE. Проверьте и отредактируйте значения переменных при необходимости."
+          else
+            echo "❌ Шаблон $TEMPLATE_FILE не найден!"
+            exit 1
+          fi
+        fi
+        
+        chmod +x "$SCRIPT"
+        # Передаем список сервисов в виде строки с разделителями-запятыми
+        export SERVICES="{{.SERVICES}}"
+        ENV_SUBST={{.ENVSUBST}} "$SCRIPT"
+
+  test-integration:
+    desc: "Запускает интеграционные тесты для указанных модулей"
+    summary: |
+      Запускает интеграционные тесты для модулей, указанных через переменную MODULES.
+      Использует тег "integration" для идентификации интеграционных тестов.
+    cmds:
+      - |
+        ERR=0
+        echo "🚀 Запуск интеграционных тестов (по тегу integration) для модулей: {{.MODULES}}"
+        for mod in {{.MODULES}}; do
+          if [ -d "$mod" ]; then
+            echo "🧪 Проверка модуля $mod на наличие интеграционных тестов"
+        
+            # Проверяем наличие файлов с тегом integration
+            HAS_TESTS=$(grep -r "//go:build integration" $mod --include="*.go" | wc -l)
+        
+            if [ "$HAS_TESTS" -eq 0 ]; then
+              echo "⚠️ Модуль $mod не содержит интеграционных тестов (с тегом integration), пропускаем"
+              continue
+            fi
+        
+            echo "▶️ Запуск интеграционных тестов для $mod"
+            go test -v -tags=integration ./$mod/... || ERR=1
+          fi
+        done
+        exit $ERR

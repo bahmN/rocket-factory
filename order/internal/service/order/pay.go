@@ -4,24 +4,30 @@ import (
 	"context"
 
 	"github.com/bahmN/rocket-factory/order/internal/model"
+	"github.com/bahmN/rocket-factory/platform/pkg/logger"
+	"go.uber.org/zap"
 )
 
 func (s *service) Pay(ctx context.Context, uuid, method string) (string, error) {
 	if uuid == "" {
+		logger.Info(ctx, "uuid is empty")
 		return "", model.ErrEmptyUUID
 	}
 
 	order, err := s.repo.Get(ctx, uuid)
 	if err != nil {
+		logger.Info(ctx, "error in getting order", zap.String("uuid", uuid))
 		return "", err
 	}
 
 	if order.Status != model.OrderStatusPENDINGPAYMENT {
+		logger.Info(ctx, "order is not pending payment", zap.String("uuid", uuid), zap.String("status", order.Status))
 		return "", model.ErrOrderPaidOrCanceled
 	}
 
 	transactionUUID, err := s.paymentClient.PayOrder(ctx, order.OrderUUID, order.UserUUID, method)
 	if err != nil {
+		logger.Info(ctx, "error in paying order", zap.String("uuid", uuid), zap.Error(err))
 		return "", err
 	}
 
@@ -34,5 +40,6 @@ func (s *service) Pay(ctx context.Context, uuid, method string) (string, error) 
 		return "", err
 	}
 
+	logger.Info(ctx, "order payed successfully", zap.String("transaction_uuid", transactionUUID), zap.String("method", method))
 	return transactionUUID, nil
 }

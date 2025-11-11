@@ -5,6 +5,7 @@ import (
 
 	clientMocks "github.com/bahmN/rocket-factory/order/internal/client/grpc/mocks"
 	"github.com/bahmN/rocket-factory/order/internal/repository/mocks"
+	"github.com/bahmN/rocket-factory/platform/pkg/logger"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -17,6 +18,8 @@ type ServiceSuit struct {
 }
 
 func (s *ServiceSuit) SetupTest() {
+	logger.SetNopLogger()
+
 	s.orderRepository = &mocks.OrderRepository{}
 	s.inventoryClient = &clientMocks.InventoryClient{}
 	s.paymentClient = &clientMocks.PaymentClient{}

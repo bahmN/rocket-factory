@@ -4,8 +4,10 @@ import (
 	"context"
 
 	"github.com/bahmN/rocket-factory/order/internal/model"
+	"github.com/bahmN/rocket-factory/platform/pkg/logger"
 	"github.com/google/uuid"
 	"github.com/samber/lo"
+	"go.uber.org/zap"
 )
 
 func (s *service) Create(ctx context.Context, req model.CreateOrderReq) (model.CreateOrderResp, error) {
@@ -13,10 +15,12 @@ func (s *service) Create(ctx context.Context, req model.CreateOrderReq) (model.C
 		UUIDs: req.PartsUUID,
 	})
 	if err != nil {
+		logger.Info(ctx, "error in getting parts", zap.Error(err))
 		return model.CreateOrderResp{}, err
 	}
 
 	if len(parts) == 0 {
+		logger.Info(ctx, "parts not found", zap.Any("parts_uuid", req.PartsUUID))
 		return model.CreateOrderResp{}, model.ErrPartsNotFound
 	}
 
@@ -36,9 +40,11 @@ func (s *service) Create(ctx context.Context, req model.CreateOrderReq) (model.C
 
 	err = s.repo.Create(ctx, newOrder)
 	if err != nil {
+		logger.Info(ctx, "error in creating order", zap.Error(err))
 		return model.CreateOrderResp{}, err
 	}
 
+	logger.Info(ctx, "order created", zap.String("order_uuid", orderUUID))
 	return model.CreateOrderResp{
 		OrderUUID:  orderUUID,
 		TotalPrice: totalPrice,
