@@ -17,7 +17,7 @@ type ServiceSuit struct {
 func (s *ServiceSuit) SetupTest() {
 	logger.SetNopLogger()
 
-	s.inventoryRepository = &mocks.InventoryRepository{}
+	s.inventoryRepository = mocks.NewInventoryRepository(s.T())
 	s.service = NewService(s.inventoryRepository)
 }
 

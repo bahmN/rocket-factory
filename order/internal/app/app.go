@@ -16,6 +16,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/stdlib"
+	"go.uber.org/zap"
 )
 
 type App struct {
@@ -36,7 +37,38 @@ func New(ctx context.Context) (*App, error) {
 }
 
 func (a *App) Run(ctx context.Context) error {
-	return a.runHTTPServer(ctx)
+	errCh := make(chan error, 2)
+
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	// Запускаем консьюмер
+	go func() {
+		if err := a.runConsumer(ctx); err != nil {
+			errCh <- fmt.Errorf("consumer error: %w", err)
+		}
+	}()
+
+	// Запускаем HTTP-сервер
+	go func() {
+		if err := a.runHTTPServer(ctx); err != nil {
+			errCh <- fmt.Errorf("http server error: %w", err)
+		}
+	}()
+
+	select {
+	case err := <-errCh:
+		logger.Error(ctx, "❌ Компонент завершился с ошибкой, завершение работы", zap.Error(err))
+		// Триггерим cancel, чтобы остановить второй компонент
+		cancel()
+		// Дождись завершения всех задач (если есть graceful shutdown внутри)
+		<-ctx.Done()
+		return err
+	case <-ctx.Done():
+		logger.Info(ctx, "🔔 Получен сигнал завершения работы")
+	}
+
+	return nil
 }
 
 func (a *App) initDeps(ctx context.Context) error {
@@ -147,6 +179,17 @@ func (a *App) initMigrations(ctx context.Context) error {
 	if err != nil {
 		logger.Warn(ctx, fmt.Sprintf("db migration error: %v", err))
 		return nil
+	}
+
+	return nil
+}
+
+func (a *App) runConsumer(ctx context.Context) error {
+	logger.Info(ctx, "🚀 OrderAssembled Kafka consumer запущен")
+
+	err := a.diContainer.OrderConsumerService(ctx).RunConsumer(ctx)
+	if err != nil {
+		return err
 	}
 
 	return nil

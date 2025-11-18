@@ -2,12 +2,14 @@ package part
 
 import (
 	"context"
-	"log"
 
 	"github.com/bahmN/rocket-factory/inventory/internal/model"
 	"github.com/bahmN/rocket-factory/inventory/internal/repository/converter"
 	repoModel "github.com/bahmN/rocket-factory/inventory/internal/repository/model"
+	"github.com/bahmN/rocket-factory/platform/pkg/logger"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.uber.org/zap"
 )
 
 func (r *repository) ListParts(ctx context.Context, filter model.Filter) ([]model.Part, error) {
@@ -17,15 +19,15 @@ func (r *repository) ListParts(ctx context.Context, filter model.Filter) ([]mode
 	if err != nil {
 		return nil, err
 	}
-	go func() {
+	defer func(cursor *mongo.Cursor, ctx context.Context) {
 		err = cursor.Close(ctx)
 		if err != nil {
-			log.Println("failed to close cursor:", err)
+			logger.Warn(ctx, "error closing mongo cursor", zap.Error(err))
 		}
-	}()
+	}(cursor, ctx)
 
 	var repoParts []*repoModel.Part
-	if err := cursor.All(ctx, &repoParts); err != nil {
+	if err = cursor.All(ctx, &repoParts); err != nil {
 		return nil, err
 	}
 
