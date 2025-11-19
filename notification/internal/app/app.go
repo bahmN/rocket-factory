@@ -7,6 +7,7 @@ import (
 	"github.com/bahmN/rocket-factory/notification/internal/config"
 	"github.com/bahmN/rocket-factory/platform/pkg/closer"
 	"github.com/bahmN/rocket-factory/platform/pkg/logger"
+	"golang.org/x/sync/errgroup"
 )
 
 type App struct {
@@ -24,35 +25,31 @@ func New(ctx context.Context) (*App, error) {
 }
 
 func (a *App) Run(ctx context.Context) error {
-	errCh := make(chan error, 2)
+	g, gCtx := errgroup.WithContext(ctx)
 
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
-	go func() {
-		if err := a.runPaidConsumer(ctx); err != nil {
-			errCh <- fmt.Errorf("consumer error: %w", err)
+	g.Go(func() error {
+		logger.Info(ctx, "Starting order consumer service (OrderPaid)")
+		if err := a.runPaidConsumer(gCtx); err != nil {
+			return fmt.Errorf("order consumer service error: %w", err)
 		}
-	}()
+		return nil
+	})
 
-	go func() {
-		if err := a.runAssembledConsumer(ctx); err != nil {
-			errCh <- fmt.Errorf("consumer error: %w", err)
+	g.Go(func() error {
+		logger.Info(ctx, "Starting order consumer service (ShipAssembled)")
+		if err := a.runAssembledConsumer(gCtx); err != nil {
+			return fmt.Errorf("order consumer service error: %w", err)
 		}
-	}()
+		return nil
+	})
 
 	select {
-	case err := <-errCh:
-		// Триггерим cancel, чтобы остановить второй компонент
-		cancel()
-		// Дождись завершения всех задач (если есть graceful shutdown внутри)
-		<-ctx.Done()
-		return err
-	case <-ctx.Done():
-		logger.Info(ctx, "🔔 Получен сигнал завершения работы")
+	case <-gCtx.Done():
+		return gCtx.Err()
+	default:
 	}
 
-	return nil
+	return g.Wait()
 }
 
 func (a *App) initDeps(ctx context.Context) error {

@@ -16,7 +16,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/stdlib"
-	"go.uber.org/zap"
+	"golang.org/x/sync/errgroup"
 )
 
 type App struct {
@@ -37,38 +37,31 @@ func New(ctx context.Context) (*App, error) {
 }
 
 func (a *App) Run(ctx context.Context) error {
-	errCh := make(chan error, 2)
+	g, gCtx := errgroup.WithContext(ctx)
 
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
-	// Запускаем консьюмер
-	go func() {
-		if err := a.runConsumer(ctx); err != nil {
-			errCh <- fmt.Errorf("consumer error: %w", err)
+	g.Go(func() error {
+		logger.Info(ctx, "Starting order consumer")
+		if err := a.runConsumer(gCtx); err != nil {
+			return fmt.Errorf("order consumer service error: %w", err)
 		}
-	}()
+		return nil
+	})
 
-	// Запускаем HTTP-сервер
-	go func() {
-		if err := a.runHTTPServer(ctx); err != nil {
-			errCh <- fmt.Errorf("http server error: %w", err)
+	g.Go(func() error {
+		logger.Info(ctx, "Starting HTTP server")
+		if err := a.runHTTPServer(gCtx); err != nil {
+			return fmt.Errorf("http server error: %w", err)
 		}
-	}()
+		return nil
+	})
 
 	select {
-	case err := <-errCh:
-		logger.Error(ctx, "❌ Компонент завершился с ошибкой, завершение работы", zap.Error(err))
-		// Триггерим cancel, чтобы остановить второй компонент
-		cancel()
-		// Дождись завершения всех задач (если есть graceful shutdown внутри)
-		<-ctx.Done()
-		return err
-	case <-ctx.Done():
-		logger.Info(ctx, "🔔 Получен сигнал завершения работы")
+	case <-gCtx.Done():
+		return gCtx.Err()
+	default:
 	}
 
-	return nil
+	return g.Wait()
 }
 
 func (a *App) initDeps(ctx context.Context) error {
