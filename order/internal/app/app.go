@@ -16,6 +16,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/stdlib"
+	"golang.org/x/sync/errgroup"
 )
 
 type App struct {
@@ -36,7 +37,31 @@ func New(ctx context.Context) (*App, error) {
 }
 
 func (a *App) Run(ctx context.Context) error {
-	return a.runHTTPServer(ctx)
+	g, gCtx := errgroup.WithContext(ctx)
+
+	g.Go(func() error {
+		logger.Info(ctx, "Starting order consumer")
+		if err := a.runConsumer(gCtx); err != nil {
+			return fmt.Errorf("order consumer service error: %w", err)
+		}
+		return nil
+	})
+
+	g.Go(func() error {
+		logger.Info(ctx, "Starting HTTP server")
+		if err := a.runHTTPServer(gCtx); err != nil {
+			return fmt.Errorf("http server error: %w", err)
+		}
+		return nil
+	})
+
+	select {
+	case <-gCtx.Done():
+		return gCtx.Err()
+	default:
+	}
+
+	return g.Wait()
 }
 
 func (a *App) initDeps(ctx context.Context) error {
@@ -147,6 +172,17 @@ func (a *App) initMigrations(ctx context.Context) error {
 	if err != nil {
 		logger.Warn(ctx, fmt.Sprintf("db migration error: %v", err))
 		return nil
+	}
+
+	return nil
+}
+
+func (a *App) runConsumer(ctx context.Context) error {
+	logger.Info(ctx, "🚀 OrderAssembled Kafka consumer запущен")
+
+	err := a.diContainer.OrderConsumerService(ctx).RunConsumer(ctx)
+	if err != nil {
+		return err
 	}
 
 	return nil

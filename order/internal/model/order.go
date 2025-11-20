@@ -4,6 +4,7 @@ const (
 	OrderStatusPENDINGPAYMENT string = "PENDING_PAYMENT"
 	OrderStatusPAID           string = "PAID"
 	OrderStatusCANCELLED      string = "CANCELLED"
+	OrderStatusASSEMBLED      string = "ASSEMBLED"
 )
 
 type CreateOrderReq struct {

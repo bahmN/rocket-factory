@@ -5,6 +5,7 @@ import (
 
 	"github.com/bahmN/rocket-factory/order/internal/model"
 	"github.com/bahmN/rocket-factory/platform/pkg/logger"
+	uuidgen "github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -36,6 +37,17 @@ func (s *service) Pay(ctx context.Context, uuid, method string) (string, error) 
 	order.TransactionUUID = &transactionUUID
 
 	err = s.repo.Update(ctx, uuid, order)
+	if err != nil {
+		return "", err
+	}
+
+	err = s.orderPaidProducer.ProduceOrderPaid(ctx, model.OrderPaidEvent{
+		EventUUID:       uuidgen.NewString(),
+		OrderUUID:       order.OrderUUID,
+		UserUUID:        order.UserUUID,
+		PaymentMethod:   method,
+		TransactionUUID: transactionUUID,
+	})
 	if err != nil {
 		return "", err
 	}

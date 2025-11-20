@@ -1,6 +1,8 @@
 package config
 
 import (
+	"os"
+
 	"github.com/bahmN/rocket-factory/order/internal/config/env"
 	"github.com/joho/godotenv"
 )
@@ -8,55 +10,73 @@ import (
 var appConfig *config
 
 type config struct {
-	Logger        LoggerConfig
-	OrderHTTP     OrderHTTPConfig
-	Postgres      PostgresConfig
-	InventoryGRPC InventoryGRPCConfig
-	PaymentGRPC   PaymentGRPCConfig
+	OrderHTTP              OrderHTTPConfig
+	Postgres               PostgresConfig
+	InventoryGRPC          InventoryGRPCConfig
+	PaymentGRPC            PaymentGRPCConfig
+	Kafka                  KafkaConfig
+	OrderAssembledConsumer OrderAssembledConsumerConfig
+	OrderPaidProducer      OrderPaidProducerConfig
+	Logger                 LoggerConfig
 }
 
 func Load(path ...string) error {
 	err := godotenv.Load(path...)
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+
+	orderHTTPConfig, err := env.NewOrderHTTPConfig()
 	if err != nil {
 		return err
 	}
 
-	loggerCfg, err := env.NewLoggerConfig()
+	postgresConfig, err := env.NewPostgresConfig()
 	if err != nil {
 		return err
 	}
 
-	orderCfg, err := env.NewOrderHTTPConfig()
+	inventoryGRPCConfig, err := env.NewInventoryGRPCConfig()
 	if err != nil {
 		return err
 	}
 
-	postgresCfg, err := env.NewPostgresConfig()
+	paymentGRPCConfig, err := env.NewPaymentGRPCConfig()
 	if err != nil {
 		return err
 	}
 
-	inventoryCfg, err := env.NewInventoryGRPCConfig()
+	orderAssembledConsumerConfig, err := env.NewOrderAssembledConsumerConfig()
 	if err != nil {
 		return err
 	}
 
-	paymentCfg, err := env.NewPaymentGRPCConfig()
+	orderPaidProducerConfig, err := env.NewOrderPaidProducerConfig()
+	if err != nil {
+		return err
+	}
+
+	kafkaConfig, err := env.NewKafkaConfig()
+	if err != nil {
+		return err
+	}
+
+	loggerConfig, err := env.NewLoggerConfig()
 	if err != nil {
 		return err
 	}
 
 	appConfig = &config{
-		Logger:        loggerCfg,
-		OrderHTTP:     orderCfg,
-		Postgres:      postgresCfg,
-		InventoryGRPC: inventoryCfg,
-		PaymentGRPC:   paymentCfg,
+		OrderHTTP:              orderHTTPConfig,
+		Postgres:               postgresConfig,
+		InventoryGRPC:          inventoryGRPCConfig,
+		PaymentGRPC:            paymentGRPCConfig,
+		OrderAssembledConsumer: orderAssembledConsumerConfig,
+		OrderPaidProducer:      orderPaidProducerConfig,
+		Kafka:                  kafkaConfig,
+		Logger:                 loggerConfig,
 	}
-
 	return nil
 }
 
-func AppConfig() *config {
-	return appConfig
-}
+func AppConfig() *config { return appConfig }
