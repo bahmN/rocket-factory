@@ -44,7 +44,7 @@ vars:
   OPEN_API_FILES: '{{.ROOT_DIR}}/shared/api/bundles'
 
   MODULES: order payment inventory
-  SERVICES: core,inventory,order,payment,assembly,notification
+  SERVICES: core,inventory,order,payment,assembly,notification,iam
 
 tasks:
   install-formatters:

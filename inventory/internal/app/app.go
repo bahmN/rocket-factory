@@ -10,6 +10,7 @@ import (
 	"github.com/bahmN/rocket-factory/platform/pkg/closer"
 	"github.com/bahmN/rocket-factory/platform/pkg/grpc/health"
 	"github.com/bahmN/rocket-factory/platform/pkg/logger"
+	grpcMidlleware "github.com/bahmN/rocket-factory/platform/pkg/middleware/grpc"
 	inventoryV1 "github.com/bahmN/rocket-factory/shared/pkg/proto/inventory/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -93,7 +94,12 @@ func (a *App) initListener(_ context.Context) error {
 }
 
 func (a *App) initGRPCServer(ctx context.Context) error {
-	a.gRPCServer = grpc.NewServer(grpc.Creds(insecure.NewCredentials()))
+	authInterceptor := grpcMidlleware.NewAuthInterceptor(a.diContainer.IAMClient(ctx))
+	a.gRPCServer = grpc.NewServer(
+		grpc.Creds(insecure.NewCredentials()),
+		grpc.ChainUnaryInterceptor(
+			authInterceptor.Unary(),
+		))
 	closer.AddNamed("gRPC server", func(ctx context.Context) error {
 		a.gRPCServer.GracefulStop()
 		return nil

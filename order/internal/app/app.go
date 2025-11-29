@@ -11,6 +11,7 @@ import (
 	"github.com/bahmN/rocket-factory/order/internal/config"
 	"github.com/bahmN/rocket-factory/platform/pkg/closer"
 	"github.com/bahmN/rocket-factory/platform/pkg/logger"
+	HTTPMiddleware "github.com/bahmN/rocket-factory/platform/pkg/middleware/http"
 	"github.com/bahmN/rocket-factory/platform/pkg/migrator"
 	orderV1 "github.com/bahmN/rocket-factory/shared/pkg/openapi/order/v1"
 	"github.com/go-chi/chi/v5"
@@ -137,9 +138,12 @@ func (a *App) initHTTPServer(ctx context.Context) error {
 
 	r := chi.NewRouter()
 
+	authMiddleware := HTTPMiddleware.NewAuthMiddleware(a.diContainer.IAMClient(ctx))
+
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(10 * time.Second))
+	r.Use(authMiddleware.Handle)
 
 	r.Mount("/", server)
 
