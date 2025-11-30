@@ -21,7 +21,7 @@ func userInfoToModel(data *commonV1.UserInfo) serviceModel.UserInfo {
 	return serviceModel.UserInfo{
 		Login:               data.Login,
 		Email:               data.Email,
-		NotificationMethods: notificationMethodsToModel(data.NotificationMethod),
+		NotificationMethods: notificationMethodsToModel(data.NotificationMethods),
 	}
 }
 
@@ -54,9 +54,9 @@ func UserToProto(user serviceModel.User) *commonV1.User {
 
 func userInfoToProto(info serviceModel.UserInfo) *commonV1.UserInfo {
 	return &commonV1.UserInfo{
-		Login:              info.Login,
-		Email:              info.Email,
-		NotificationMethod: notificationMethodsToProto(info.NotificationMethods),
+		Login:               info.Login,
+		Email:               info.Email,
+		NotificationMethods: notificationMethodsToProto(info.NotificationMethods),
 	}
 }
 

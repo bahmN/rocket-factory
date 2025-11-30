@@ -8,8 +8,8 @@ import (
 	commonV1 "github.com/bahmN/rocket-factory/shared/pkg/proto/common/v1"
 )
 
-func WhoamiResponseToProto(data model.WhoamiResponse, sessionUUID string) *authV1.WhoamiResponse {
-	return &authV1.WhoamiResponse{
+func WhoamiResponseToProto(data model.WhoamiResponse, sessionUUID string) *authV1.WhoaimResponse {
+	return &authV1.WhoaimResponse{
 		Session: SessionToProto(data.Session, sessionUUID),
 		User:    UserToProto(data.User),
 	}
