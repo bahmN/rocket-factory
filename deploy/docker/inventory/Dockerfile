@@ -22,6 +22,7 @@ COPY inventory/go.mod inventory/go.sum ./inventory/
 COPY payment/go.mod payment/go.sum ./payment/
 COPY assembly/go.mod assembly/go.sum ./assembly/
 COPY notification/go.mod notification/go.sum ./notification/
+COPY iam/go.mod order/go.sum ./iam/
 
 # Загружаем все зависимости, указанные в модульных файлах
 RUN go mod download
@@ -34,6 +35,7 @@ COPY inventory ./inventory
 COPY payment ./payment
 COPY assembly ./assembly
 COPY notification ./notification
+COPY iam ./iam
 
 # Скачиваем grpc-health-probe — это утилита для проверки состояния gRPC-сервиса
 ADD https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/v0.4.37/grpc_health_probe-linux-amd64 ./grpc-health-probe
@@ -49,7 +51,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o app-inventory ./inventory/
 # ============================
 
 # Используем чистый Alpine образ как итоговый контейнер — он будет лёгким и безопасным
-FROM alpine:3.21.3
+FROM mirror.gcr.io/library/alpine:3.21.3
 
 # Создаём системного пользователя без root-прав — best practice для безопасности
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
@@ -66,6 +68,7 @@ COPY --from=builder /app/app-inventory .
 # Копируем бинарь grpc-health-probe в /bin
 COPY --from=builder /app/grpc-health-probe /bin/grpc-health-probe
 
+# Копируем env, потому что они в приложении жестко заданы по этому пути
 COPY deploy/compose/inventory/.env /deploy/compose/inventory/.env
 
 # Экспонируем порт gRPC-сервиса Inventory

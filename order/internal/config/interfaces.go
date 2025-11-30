@@ -39,3 +39,7 @@ type OrderAssembledConsumerConfig interface {
 	GroupID() string
 	Config() *sarama.Config
 }
+
+type IAMConfig interface {
+	Address() string
+}

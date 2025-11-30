@@ -19,7 +19,7 @@ import (
 const (
 	defaultAppName        = "app"
 	defaultAppPort        = "50051"
-	defaultStartupTimeout = 1 * time.Minute
+	defaultStartupTimeout = 3 * time.Minute
 )
 
 type Logger interface {
