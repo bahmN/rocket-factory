@@ -22,11 +22,15 @@ import (
 	wrapperKafkaConsumer "github.com/bahmN/rocket-factory/platform/pkg/kafka/consumer"
 	wrapperKafkaProducer "github.com/bahmN/rocket-factory/platform/pkg/kafka/producer"
 	"github.com/bahmN/rocket-factory/platform/pkg/logger"
+	middlewareGRPC "github.com/bahmN/rocket-factory/platform/pkg/middleware/grpc"
+	HTTPMiddleware "github.com/bahmN/rocket-factory/platform/pkg/middleware/http"
 	kafkaMiddleware "github.com/bahmN/rocket-factory/platform/pkg/middleware/kafka"
 	orderV1 "github.com/bahmN/rocket-factory/shared/pkg/openapi/order/v1"
+	authV1 "github.com/bahmN/rocket-factory/shared/pkg/proto/auth/v1"
 	inventoryV1 "github.com/bahmN/rocket-factory/shared/pkg/proto/inventory/v1"
 	paymentV1 "github.com/bahmN/rocket-factory/shared/pkg/proto/payment/v1"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -49,6 +53,8 @@ type diContainer struct {
 	orderAssembledDecoder kafkaConv.OrderAssembledDecoder
 	syncProducer          sarama.SyncProducer
 	orderPaidProducer     wrapperKafka.Producer
+
+	iamClient HTTPMiddleware.IAMClient
 }
 
 func NewDiContainer() *diContainer {
@@ -224,4 +230,32 @@ func (d *diContainer) OrderPaidProducer() wrapperKafka.Producer {
 		)
 	}
 	return d.orderPaidProducer
+}
+
+func (d *diContainer) IAMClient(ctx context.Context) middlewareGRPC.IAMClient {
+	if d.iamClient == nil {
+		grpcIAM := authV1.NewAuthServiceClient(d.IAMConn(ctx))
+		d.iamClient = grpcIAM
+	}
+	return d.iamClient
+}
+
+func (d *diContainer) IAMConn(_ context.Context) *grpc.ClientConn {
+	conn, err := grpc.NewClient(
+		config.AppConfig().IamGRPC.Address(),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		panic(fmt.Sprintf("❌ Ошибка подключения к IAM Service: %v", err))
+	}
+
+	closer.AddNamed("IAM client", func(ctx context.Context) error {
+		if err := conn.Close(); err != nil {
+			logger.Error(ctx, "❌ Ошибка при закрытии подключения с IAM Service", zap.Error(err))
+			return err
+		}
+		return nil
+	})
+
+	return conn
 }
